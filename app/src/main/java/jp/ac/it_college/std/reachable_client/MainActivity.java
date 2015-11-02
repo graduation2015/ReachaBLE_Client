@@ -1,5 +1,4 @@
 package jp.ac.it_college.std.reachable_client;
-
 import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.Loader;
@@ -30,21 +29,17 @@ public class MainActivity extends AppCompatActivity
     private Toolbar mToolbar;
     private AWSClientManager mClientManager;
     private ProgressDialogFragment mDialogFragment;
-    private Bundle savedInstanceState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        initFragment(savedInstanceState);
-        this.savedInstanceState = savedInstanceState;
-        mDialogFragment = new ProgressDialogFragment().newInstance("Credentials", "Getting credentials");
+        initFragment(savedInstanceState);
         findViews();
         setUpDrawerList();
         setUpToolbar();
         initAWSClient();
-
     }
 
     @Override
@@ -117,6 +112,7 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         }
 
+        mDialogFragment = new ProgressDialogFragment().newInstance("Credentials", "Getting credentials");
     }
 
     @Override
@@ -146,7 +142,6 @@ public class MainActivity extends AppCompatActivity
         });
 
         mClientManager = new AWSClientManager(awsCredentials);
-        initFragment(savedInstanceState);
     }
 
     @Override
@@ -158,13 +153,15 @@ public class MainActivity extends AppCompatActivity
 
     private class DrawerItemClickListener implements android.widget.AdapterView.OnItemClickListener {
 
+        public static final int FRAGMENT_MAIN = 0;
+
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             selectItem(i);
         }
 
         private void selectItem(int position) {
-            Fragment fragment = new MainFragment();
+            Fragment fragment = getFragment(position);
             getFragmentManager().beginTransaction()
                     .replace(R.id.container_content, fragment)
                     .commit();
@@ -174,6 +171,14 @@ public class MainActivity extends AppCompatActivity
             mDrawerLayout.closeDrawers();
         }
 
+        private Fragment getFragment(int position) {
+            switch (position) {
+                case FRAGMENT_MAIN:
+                    return new MainFragment();
+                default:
+                    return new MainFragment();
+            }
+        }
     }
 
 }
