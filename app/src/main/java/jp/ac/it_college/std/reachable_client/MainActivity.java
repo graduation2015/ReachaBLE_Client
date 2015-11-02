@@ -1,6 +1,7 @@
 package jp.ac.it_college.std.reachable_client;
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -13,12 +14,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
 import com.amazonaws.auth.AWSCredentials;
 
 public class MainActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<AWSCredentials> {
+        implements LoaderManager.LoaderCallbacks<AWSCredentials>{
 
     private String[] mPlanetTitles;
     private ListView mDrawerList;
@@ -111,7 +113,6 @@ public class MainActivity extends AppCompatActivity
                     .replace(R.id.container_content, new MainFragment())
                     .commit();
         }
-
         mDialogFragment = new ProgressDialogFragment().newInstance("Credentials", "Getting credentials");
     }
 
@@ -149,12 +150,11 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
-
     private class DrawerItemClickListener implements android.widget.AdapterView.OnItemClickListener {
 
         public static final int FRAGMENT_MAIN = 0;
 
+        //TODO:フィルター
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             selectItem(i);
@@ -180,5 +180,4 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
 }
