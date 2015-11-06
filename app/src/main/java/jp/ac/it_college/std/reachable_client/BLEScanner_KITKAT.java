@@ -11,6 +11,7 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class BLEScanner_KITKAT {
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
+    private DownloadService downloadService;
     private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private boolean isScanning;
 
@@ -28,8 +30,10 @@ public class BLEScanner_KITKAT {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             if (!isAdded(device)) {
-                deviceList.add(device);
+                saveDevice(device);
+                Log.v("test",device.toString());
                 //TODO:Download処理
+                downloadService.getS3Key(device);
             }
         }
     };
@@ -40,6 +44,7 @@ public class BLEScanner_KITKAT {
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         // mBluetoothAdapterの取得
         mBluetoothAdapter = bluetoothManager.getAdapter();
+        downloadService = new DownloadService();
     }
 
     // スキャン実施
