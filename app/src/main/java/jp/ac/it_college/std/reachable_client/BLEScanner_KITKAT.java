@@ -43,7 +43,7 @@ public class BLEScanner_KITKAT {
     }
 
     // スキャン実施
-    public void startScan(List<ScanFilter> filters, ScanSettings settings) {
+    public void startScan() {
         // スキャンフィルタを設定するならこちら
         mBluetoothAdapter.startLeScan(callback);
 

@@ -1,6 +1,7 @@
 package jp.ac.it_college.std.reachable_client;
 
 import android.app.ListFragment;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,6 +25,8 @@ public class MainFragment extends ListFragment {
     private static final String JSON_PATH = DIRECTORY_PATH + "jsons/";
     private static final String TAGS_PATH  = DIRECTORY_PATH + "tags/";
     private String[] list = new File(IMAGE_PATH).list();
+
+    private final int REQUEST_ENABLE_BT = 0x01;
 
     private Button startButton;
     private Button stopButton;
@@ -58,10 +61,37 @@ public class MainFragment extends ListFragment {
         public void onClick(View v) {
             //Service開始、終了
             if (v == startButton) {
+                bluetoothSetUp();
                 getActivity().startService(new Intent(getActivity(), DownloadService.class));
             } else if (v == stopButton) {
+                bluetoothDisable();
                 getActivity().stopService(new Intent(getActivity(), DownloadService.class));
             }
+        }
+    }
+
+    private void bluetoothSetUp() {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+
+        if (bt == null) {
+            return;
+        }
+
+        if (!bt.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
+    private void bluetoothDisable() {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+
+        if (bt == null) {
+            return;
+        }
+
+        if (bt.isEnabled()) {
+            bt.disable();
         }
     }
 }

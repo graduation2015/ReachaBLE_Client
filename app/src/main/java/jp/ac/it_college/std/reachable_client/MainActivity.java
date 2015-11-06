@@ -1,6 +1,7 @@
 package jp.ac.it_college.std.reachable_client;
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
@@ -21,6 +22,7 @@ import com.amazonaws.auth.AWSCredentials;
 
 public class MainActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<AWSCredentials>{
+
 
     private String[] mPlanetTitles;
     private ListView mDrawerList;
@@ -180,4 +182,5 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
 }
