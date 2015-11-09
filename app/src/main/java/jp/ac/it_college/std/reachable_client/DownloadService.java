@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
@@ -15,7 +16,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -25,7 +25,6 @@ import java.util.UUID;
 
 public class DownloadService extends Service {
     private List<BluetoothDevice> deviceList = new ArrayList<>();
-    private View contentView;
     private Context context;
     private BluetoothGatt bluetoothGatt;
     private int mStatus;
@@ -36,13 +35,15 @@ public class DownloadService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        context = getApplicationContext();
+
         Log.v("test", "create");
-        scanStart();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v("test","start");
+        scanStart();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -101,11 +102,10 @@ public class DownloadService extends Service {
     };
 
     private void scanStart() {
-        context = getApplicationContext();
         List<ScanFilter> fillter = new ArrayList<>();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BLEScanner_LOLIPOP blescanner = new BLEScanner_LOLIPOP(context);
+            BLEScannerLolipop blescanner = new BLEScannerLolipop(context);
 
             ScanSettings.Builder settingsBuilder = new ScanSettings.Builder();
             settingsBuilder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
@@ -114,29 +114,31 @@ public class DownloadService extends Service {
 
             blescanner.startScan(fillter, settings);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            BLEScanner_KITKAT blescanner = new BLEScanner_KITKAT(context);
+            BLEScannerKitkat blescanner = new BLEScannerKitkat(context);
             blescanner.startScan();
         }
     }
 
     private void scanStop() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BLEScanner_LOLIPOP bleScanner = new BLEScanner_LOLIPOP(context);
+            BLEScannerLolipop bleScanner = new BLEScannerLolipop(context);
             bleScanner.stopScan();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            BLEScanner_KITKAT bleScanner = new BLEScanner_KITKAT(context);
+            BLEScannerKitkat bleScanner = new BLEScannerKitkat(context);
             bleScanner.stopScan();
         }
     }
 
     private BluetoothGattCharacteristic getCharacteristic() {
-        return bluetoothGatt
-                .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE))
+        BluetoothGattService service = bluetoothGatt
+                .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
+        Log.i("test", "gatt service: " + service);
+        return service
                 .getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
     }
 
     public void connect(Context context, BluetoothDevice device) {
-        Log.v("test","connect");
+        Log.v("test", "connect");
         bluetoothGatt = device.connectGatt(context, false, mGattCallback);
         bluetoothGatt.connect();
     }
@@ -162,8 +164,7 @@ public class DownloadService extends Service {
             try {
                 bluetoothGatt.readCharacteristic(getCharacteristic());
             } catch (Exception e) {
-                Log.v("test", "nullpo");
-                e.printStackTrace();
+                Log.e("test", e.toString(), e);
             }
         }
     }
@@ -175,14 +176,15 @@ public class DownloadService extends Service {
         //TODO:Key取得後の処理
 //        ((ImageView) contentView.findViewById(R.id.img_response)).setImageBitmap(decodeBytes(bytes));
     }
-    public void getS3Key(BluetoothDevice device) {
-        Log.v("test","gets3key");
+    public void getS3Key(Context context, BluetoothDevice device) {
+        Log.v("test", "gets3key");
+        this.context = context;
         connect(context, device);
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 readCharacteristic();
             }
-        }, 3000);
+        }, 2000);
     }
 }

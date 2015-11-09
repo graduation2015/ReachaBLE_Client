@@ -31,6 +31,7 @@ public class MainFragment extends ListFragment {
     private Button startButton;
     private Button stopButton;
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -45,6 +46,12 @@ public class MainFragment extends ListFragment {
 
         return contentView;
     }
+
+/*    @Override
+    public void onStart() {
+        super.onStart();
+        bluetoothSetUp();
+    }*/
 
     private void setDownLoads() {
         items.clear();

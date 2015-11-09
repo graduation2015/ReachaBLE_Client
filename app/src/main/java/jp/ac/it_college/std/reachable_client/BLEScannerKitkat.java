@@ -5,18 +5,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BLEScanner_LOLIPOP extends ScanCallback {
+@TargetApi(Build.VERSION_CODES.KITKAT)
+public class BLEScannerKitkat {
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
@@ -24,22 +20,36 @@ public class BLEScanner_LOLIPOP extends ScanCallback {
     private DownloadService downloadService;
     private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private boolean isScanning;
+    private Context context;
 
-    public BLEScanner_LOLIPOP(Context context) {
+    private BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            if (!isAdded(device)) {
+                saveDevice(device);
+                Log.v("test", device.toString());
+                //TODO:Download処理
+                Log.i("test", "context: " + context);
+                downloadService.getS3Key(context, device);
+            }
+        }
+    };
+
+    public BLEScannerKitkat(Context context) {
+        Log.i("test", "" + context);
+        this.context = context;
         //初期化
         bluetoothManager = (BluetoothManager) context
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         // mBluetoothAdapterの取得
         mBluetoothAdapter = bluetoothManager.getAdapter();
-        // mBluetoothLeScannerの初期化
-        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         downloadService = new DownloadService();
     }
 
     // スキャン実施
-    public void startScan(List<ScanFilter> filters, ScanSettings settings) {
+    public void startScan() {
         // スキャンフィルタを設定するならこちら
-        mBluetoothLeScanner.startScan(filters, settings, this);
+        mBluetoothAdapter.startLeScan(callback);
 
         isScanning = true;
     }
@@ -47,27 +57,14 @@ public class BLEScanner_LOLIPOP extends ScanCallback {
     //スキャン停止
     public void stopScan() {
         if (mBluetoothLeScanner != null) {
-            mBluetoothLeScanner.stopScan(this);
+            mBluetoothAdapter.stopLeScan(callback);
             isScanning = false;
         }
     }
 
     // スキャンしたデバイスがリストに追加済みかどうかの確認
     public boolean isAdded(BluetoothDevice device) {
-            return deviceList.contains(device);
-    }
-
-    @Override
-    public void onScanResult(int callbackType, ScanResult result) {
-        super.onScanResult(callbackType, result);
-
-        if (result != null && result.getDevice() != null) {
-            if (!isAdded(result.getDevice())) {
-                saveDevice(result.getDevice());
-                //TODO:Download処理
-                downloadService.getS3Key(result.getDevice());
-            }
-        }
+        return deviceList.contains(device);
     }
 
     // スキャンしたデバイスのリスト保存
