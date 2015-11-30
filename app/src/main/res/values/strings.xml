@@ -19,8 +19,8 @@
     <string name="lbl_byte">bytes</string>
     <string name="lbl_s3_download_empty">No files.</string>
     <string-array name="planets_array">
-        <item>Main</item>
-        <item>S3 Upload</item>
+        <item>Food</item>
+        <item>Fashion</item>
         <item>S3 Download</item>
         <item>S3 List</item>
     </string-array>
