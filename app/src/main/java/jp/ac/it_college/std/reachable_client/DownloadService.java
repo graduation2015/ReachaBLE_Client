@@ -11,13 +11,32 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.content.Loader;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +47,7 @@ public class DownloadService extends Service {
     private Context context;
     private BluetoothGatt bluetoothGatt;
     private int mStatus;
+    private AmazonS3Client s3Client;
 
     public static final String SERVICE_UUID_YOU_CAN_CHANGE = "0000180a-0000-1000-8000-00805f9b34fb";
     public static final String CHAR_UUID_YOU_CAN_CHANGE = "00002a29-0000-1000-8000-00805f9b34fb";
@@ -52,8 +72,6 @@ public class DownloadService extends Service {
         super.onDestroy();
         Log.v("test","destroy");
         scanStop();
-        Toast.makeText(this, "MyService　onDestroy", Toast.LENGTH_SHORT).show();
-
     }
 
     @Override
@@ -166,14 +184,18 @@ public class DownloadService extends Service {
             } catch (Exception e) {
                 Log.e("test", e.toString(), e);
             }
+        } else {
+            Log.v("test","null");
         }
     }
 
     private void handleCharacteristic(BluetoothGattCharacteristic characteristic) {
         byte[] bytes = characteristic.getValue();
         String msg = new String(bytes);
-        Log.v("test",msg);
-        //TODO:Key取得後の処理
+        Log.v("test", msg);
+        //TODO:beginDownload
+        beginDownload(msg);
+
 //        ((ImageView) contentView.findViewById(R.id.img_response)).setImageBitmap(decodeBytes(bytes));
     }
     public void getS3Key(Context context, BluetoothDevice device) {
@@ -185,6 +207,69 @@ public class DownloadService extends Service {
             public void run() {
                 readCharacteristic();
             }
-        }, 2000);
+        }, 3000);
+    }
+
+    private void beginDownload(String msg) {
+        String imagePath = MainFragment.IMAGE_PATH;
+        String jsonPath =  MainFragment.JSON_PATH;
+
+//        TransferUtility utility = new TransferUtility(s3Client, context);
+
+        TransferUtility utility = AwsUtil.getTransferUtility(context);
+
+        File file = new File(imagePath, msg);
+
+        //Image Download
+        TransferObserver observer = utility.download(
+                Constants.BUCKET_NAME + msg,
+                msg,
+                file);
+        observer.setTransferListener(new S3DownloadListener());
+
+        file = new File(jsonPath, msg + ".json");
+        //Json Download
+        observer = utility.download(
+                Constants.BUCKET_NAME + msg,
+                msg + ".json",
+                file);
+
+        observer.setTransferListener(new S3DownloadListener());
+    }
+
+    private class S3DownloadListener implements TransferListener {
+        private static final String DIALOG_TITLE = "Download";
+        private static final String DIALOG_MESSAGE = "Downloading...";
+        private static final String TAG = "S3DownloadListener";
+
+        @Override
+        public void onStateChanged(int i, TransferState transferState) {
+            Log.v("test",transferState.toString());
+            switch (transferState) {
+                case IN_PROGRESS:
+//                    mDialogFragment.show(getFragmentManager(), "tag_downloading");
+                    break;
+                case COMPLETED:
+//                    mDialogFragment.dismiss();
+//                    Toast.makeText(getActivity(), "Download completed.", Toast.LENGTH_SHORT).show();
+                    break;
+                case FAILED:
+//                    mDialogFragment.dismiss();
+//                    Toast.makeText(getActivity(), "Download failed.", Toast.LENGTH_SHORT).show();
+                default:
+                    Log.d(TAG, transferState.name());
+                    break;
+            }
+        }
+
+        @Override
+        public void onProgressChanged(int i, long l, long l1) {
+
+        }
+
+        @Override
+        public void onError(int i, Exception e) {
+
+        }
     }
 }
