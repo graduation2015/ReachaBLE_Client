@@ -1,7 +1,8 @@
 package jp.ac.it_college.std.reachable_client;
-
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -18,8 +19,11 @@ import android.widget.ListView;
 
 import com.amazonaws.auth.AWSCredentials;
 
+import java.io.Serializable;
+
 public class MainActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<AWSCredentials> {
+            implements LoaderManager.LoaderCallbacks<AWSCredentials> {
+
 
     private String[] mPlanetTitles;
     private ListView mDrawerList;
@@ -30,21 +34,17 @@ public class MainActivity extends AppCompatActivity
     private Toolbar mToolbar;
     private AWSClientManager mClientManager;
     private ProgressDialogFragment mDialogFragment;
-    private Bundle savedInstanceState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        initFragment(savedInstanceState);
-        this.savedInstanceState = savedInstanceState;
-        mDialogFragment = new ProgressDialogFragment().newInstance("Credentials", "Getting credentials");
+        initFragment(savedInstanceState);
         findViews();
         setUpDrawerList();
         setUpToolbar();
         initAWSClient();
-
     }
 
     @Override
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity
                     .replace(R.id.container_content, new MainFragment())
                     .commit();
         }
-
+        mDialogFragment = new ProgressDialogFragment().newInstance("Credentials", "Getting credentials");
     }
 
     @Override
@@ -146,7 +146,6 @@ public class MainActivity extends AppCompatActivity
         });
 
         mClientManager = new AWSClientManager(awsCredentials);
-        initFragment(savedInstanceState);
     }
 
     @Override
@@ -154,17 +153,18 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
-
     private class DrawerItemClickListener implements android.widget.AdapterView.OnItemClickListener {
 
+        public static final int FRAGMENT_MAIN = 0;
+
+        //TODO:フィルター
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
             selectItem(i);
         }
 
         private void selectItem(int position) {
-            Fragment fragment = new MainFragment();
+            Fragment fragment = getFragment(position);
             getFragmentManager().beginTransaction()
                     .replace(R.id.container_content, fragment)
                     .commit();
@@ -174,6 +174,14 @@ public class MainActivity extends AppCompatActivity
             mDrawerLayout.closeDrawers();
         }
 
+        private Fragment getFragment(int position) {
+            switch (position) {
+                case FRAGMENT_MAIN:
+                    return new MainFragment();
+                default:
+                    return new MainFragment();
+            }
+        }
     }
 
 }
