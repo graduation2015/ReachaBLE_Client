@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity
 
         initFragment(savedInstanceState);
         findViews();
-        setUpDrawerList();
+//        setUpDrawerList();
         setUpToolbar();
         initAWSClient();
     }
@@ -50,35 +50,37 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        mDrawerToggle.syncState();
+//        mDrawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
+//        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
+//        if (mDrawerToggle.onOptionsItemSelected(item)) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
     private void findViews() {
         mPlanetTitles = getResources().getStringArray(R.array.planets_array);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.list_view);
+//        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+//        mDrawerList = (ListView) findViewById(R.id.list_view);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
     }
 
     private void setUpToolbar() {
-        setSupportActionBar(mToolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+//        setSupportActionBar(mToolbar);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setHomeButtonEnabled(true);
     }
+
+/*
 
     private void setUpDrawerList() {
         mTitle = mDrawerTitle = getTitle();
@@ -103,8 +105,9 @@ public class MainActivity extends AppCompatActivity
         mDrawerList.setAdapter(new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, mPlanetTitles));
         // Set the list's click listener
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+//        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
     }
+*/
 
     private void initAWSClient() {
         getLoaderManager().restartLoader(0, null, this);
@@ -152,6 +155,7 @@ public class MainActivity extends AppCompatActivity
     public void onLoaderReset(Loader<AWSCredentials> loader) {
 
     }
+/*
 
     private class DrawerItemClickListener implements android.widget.AdapterView.OnItemClickListener {
 
@@ -159,19 +163,36 @@ public class MainActivity extends AppCompatActivity
 
         //TODO:フィルター
         @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            selectItem(i);
+        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+            selectItem(Category.values()[position]);
         }
 
-        private void selectItem(int position) {
-            Fragment fragment = getFragment(position);
+        private void selectItem(Category category) {
+            String select;
+            switch (category) {
+                case Food:
+                    select = "Food";
+                    break;
+                case Fashion:
+                    select = "Fashion";
+                    break;
+                default:
+                    select = "";
+                    break;
+            }
+
+
+
+*/
+/*            Fragment fragment = getFragment(position);
             getFragmentManager().beginTransaction()
                     .replace(R.id.container_content, fragment)
                     .commit();
 
             mDrawerList.setItemChecked(position, true);
             setTitle(mPlanetTitles[position]);
-            mDrawerLayout.closeDrawers();
+            mDrawerLayout.closeDrawers();*//*
+
         }
 
         private Fragment getFragment(int position) {
@@ -183,5 +204,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+*/
 
 }
