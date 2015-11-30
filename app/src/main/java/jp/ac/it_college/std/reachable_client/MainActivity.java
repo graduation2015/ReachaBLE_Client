@@ -15,13 +15,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 
 import com.amazonaws.auth.AWSCredentials;
 
+import java.io.Serializable;
+
 public class MainActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<AWSCredentials>{
+            implements LoaderManager.LoaderCallbacks<AWSCredentials> {
 
 
     private String[] mPlanetTitles;

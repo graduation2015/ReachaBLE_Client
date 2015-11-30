@@ -5,41 +5,45 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
-public class BLEScanner_KITKAT {
+public class BLEScannerKitkat {
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
+    private DownloadService downloadService;
     private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private boolean isScanning;
+    private Context context;
 
     private BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             if (!isAdded(device)) {
-                deviceList.add(device);
+                saveDevice(device);
+                Log.v("test", device.toString());
                 //TODO:Download処理
+                Log.i("test", "context: " + context);
+                downloadService.getS3Key(context, device);
             }
         }
     };
 
-    public BLEScanner_KITKAT(Context context) {
+    public BLEScannerKitkat(Context context) {
+        Log.i("test", "" + context);
+        this.context = context;
         //初期化
         bluetoothManager = (BluetoothManager) context
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         // mBluetoothAdapterの取得
         mBluetoothAdapter = bluetoothManager.getAdapter();
+        downloadService = new DownloadService();
     }
 
     // スキャン実施
@@ -60,7 +64,7 @@ public class BLEScanner_KITKAT {
 
     // スキャンしたデバイスがリストに追加済みかどうかの確認
     public boolean isAdded(BluetoothDevice device) {
-            return deviceList.contains(device);
+        return deviceList.contains(device);
     }
 
     // スキャンしたデバイスのリスト保存

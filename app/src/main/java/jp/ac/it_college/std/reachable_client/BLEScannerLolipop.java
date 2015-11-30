@@ -16,15 +16,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BLEScanner_LOLIPOP extends ScanCallback {
+public class BLEScannerLolipop extends ScanCallback {
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
+    private DownloadService downloadService;
     private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private boolean isScanning;
+    private Context context;
 
-    public BLEScanner_LOLIPOP(Context context) {
+    public BLEScannerLolipop(Context context) {
+        this.context = context;
         //初期化
         bluetoothManager = (BluetoothManager) context
                 .getSystemService(Context.BLUETOOTH_SERVICE);
@@ -32,6 +35,7 @@ public class BLEScanner_LOLIPOP extends ScanCallback {
         mBluetoothAdapter = bluetoothManager.getAdapter();
         // mBluetoothLeScannerの初期化
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        downloadService = new DownloadService();
     }
 
     // スキャン実施
@@ -63,6 +67,7 @@ public class BLEScanner_LOLIPOP extends ScanCallback {
             if (!isAdded(result.getDevice())) {
                 saveDevice(result.getDevice());
                 //TODO:Download処理
+                downloadService.getS3Key(context, result.getDevice());
             }
         }
     }
