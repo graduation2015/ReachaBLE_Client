@@ -18,11 +18,12 @@
     <string name="lbl_secret_key">"SecretKey: "</string>
     <string name="lbl_byte">bytes</string>
     <string name="lbl_s3_download_empty">No files.</string>
-    <string-array name="planets_array">
+    <string-array name="categories">
+        <item>All</item>
+        <item>Book</item>
         <item>Food</item>
-        <item>Fashion</item>
-        <item>S3 Download</item>
-        <item>S3 List</item>
+        <item>Music</item>
+        <item>Game</item>
     </string-array>
 
     <string-array name="mode_array">
@@ -34,5 +35,6 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="start_btn">ServiceStart</string>
     <string name="finish_btn">ServiceFinish</string>
+    <string name="filter">絞り込み</string>
 
 </resources>

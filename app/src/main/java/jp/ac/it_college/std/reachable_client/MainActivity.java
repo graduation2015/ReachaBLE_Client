@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity
     private Toolbar mToolbar;
     private AWSClientManager mClientManager;
     private ProgressDialogFragment mDialogFragment;
+    private final int REQUEST_ENABLE_BT = 0x01;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +46,8 @@ public class MainActivity extends AppCompatActivity
         findViews();
 //        setUpDrawerList();
         setUpToolbar();
-        initAWSClient();
+//        initAWSClient();
+        bluetoothSetUp();
     }
 
     @Override
@@ -68,7 +71,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void findViews() {
-        mPlanetTitles = getResources().getStringArray(R.array.planets_array);
+        mPlanetTitles = getResources().getStringArray(R.array.categories);
 //        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 //        mDrawerList = (ListView) findViewById(R.id.list_view);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -78,6 +81,19 @@ public class MainActivity extends AppCompatActivity
 //        setSupportActionBar(mToolbar);
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 //        getSupportActionBar().setHomeButtonEnabled(true);
+    }
+
+    private void bluetoothSetUp() {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+
+        if (bt == null) {
+            return;
+        }
+
+        if (!bt.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
     }
 
 /*
