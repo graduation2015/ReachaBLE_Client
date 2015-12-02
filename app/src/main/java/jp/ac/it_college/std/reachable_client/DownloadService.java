@@ -34,7 +34,11 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -183,9 +187,11 @@ public class DownloadService extends Service {
                 bluetoothGatt.readCharacteristic(getCharacteristic());
             } catch (Exception e) {
                 Log.e("test", e.toString(), e);
+                disconnect();
             }
         } else {
             Log.v("test","null");
+            disconnect();
         }
     }
 
@@ -193,11 +199,11 @@ public class DownloadService extends Service {
         byte[] bytes = characteristic.getValue();
         String msg = new String(bytes);
         Log.v("test", msg);
-        //TODO:beginDownload
         beginDownload(msg);
 
 //        ((ImageView) contentView.findViewById(R.id.img_response)).setImageBitmap(decodeBytes(bytes));
     }
+
     public void getS3Key(Context context, BluetoothDevice device) {
         Log.v("test", "gets3key");
         this.context = context;
@@ -269,7 +275,7 @@ public class DownloadService extends Service {
 
         @Override
         public void onError(int i, Exception e) {
-
+            Log.e("test", String.valueOf(i), e);
         }
     }
 }

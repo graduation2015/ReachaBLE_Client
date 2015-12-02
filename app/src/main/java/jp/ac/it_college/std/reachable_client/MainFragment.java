@@ -27,14 +27,18 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class MainFragment extends ListFragment implements View.OnClickListener{
@@ -60,9 +64,11 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
         mkdir();
 
         setListAdapter(new S3DownloadsListAdapter(getActivity(), R.layout.row_s3_downloads, items));
-
         list = Arrays.asList(new File(IMAGE_PATH).list());
+        Collections.reverse(list);
+
         setDownLoads(list);
+        updateInfoJson(list);
 
         jsonManager = new JsonManager(getActivity());
 
@@ -79,6 +85,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
         contentView.findViewById(R.id.filter_btn).setOnClickListener(this);
         contentView.findViewById(R.id.start_btn).setOnClickListener(this);
         contentView.findViewById(R.id.stop_btn).setOnClickListener(this);
+        contentView.findViewById(R.id.update_btn).setOnClickListener(this);
     }
 
     private void setDownLoads(List<String> list) {
@@ -89,6 +96,13 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
             items.add(bitmap);
         }
         ((S3DownloadsListAdapter) getListAdapter()).notifyDataSetChanged();
+    }
+
+    private void updateList() {
+        list = Arrays.asList(new File(IMAGE_PATH).list());
+        Collections.reverse(list);
+        setDownLoads(list);
+        updateInfoJson(list);
     }
 
     private void showCategorySingleChoiceDialog() {
@@ -109,6 +123,29 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                         loadJSON();
                     }
                     break;
+            }
+        }
+    }
+
+    private void updateInfoJson(List<String> list) {
+        for (String key : list) {
+            String jsonStr;
+            File downloadJsonPath = new File(MainFragment.JSON_PATH, key + ".json");
+
+            try {
+                JsonDataReader reader = new JsonDataReader();
+                jsonStr = reader.getJsonStr(new FileInputStream(downloadJsonPath));
+
+                JSONObject dwonloadJson = new JSONObject(jsonStr).getJSONObject(key);
+
+                jsonManager = new JsonManager(getActivity());
+                JSONObject rootJson = jsonManager.getJsonRootObject().put(key, dwonloadJson);
+
+                jsonManager.putJsonObj(rootJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -185,6 +222,9 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 break;
             case R.id.stop_btn:
                 getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+                break;
+            case R.id.update_btn:
+                updateList();
                 break;
             default:
                 break;

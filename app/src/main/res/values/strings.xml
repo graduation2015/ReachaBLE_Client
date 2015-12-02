@@ -36,5 +36,6 @@
     <string name="start_btn">ServiceStart</string>
     <string name="finish_btn">ServiceFinish</string>
     <string name="filter">絞り込み</string>
+    <string name="update">更新</string>
 
 </resources>
