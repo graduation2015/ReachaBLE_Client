@@ -1,4 +1,4 @@
-package jp.ac.it_college.std.reachable_client;
+package jp.ac.it_college.std.reachable_client.aws;
 
 
 import android.content.Context;
@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jp.ac.it_college.std.reachable_client.R;
 
 public class S3DownloadsListAdapter extends ArrayAdapter<Bitmap> {
     private List<Bitmap> items = new ArrayList<>();

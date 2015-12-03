@@ -1,4 +1,4 @@
-package jp.ac.it_college.std.reachable_client;
+package jp.ac.it_college.std.reachable_client.aws;
 
 import android.content.Context;
 
@@ -7,6 +7,8 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
+
+import jp.ac.it_college.std.reachable_client.Constants;
 
 public class AwsUtil {
     private static CognitoCachingCredentialsProvider sCredProvider;

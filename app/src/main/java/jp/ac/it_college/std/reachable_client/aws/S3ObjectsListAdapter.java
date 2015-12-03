@@ -1,4 +1,4 @@
-package jp.ac.it_college.std.reachable_client;
+package jp.ac.it_college.std.reachable_client.aws;
 
 
 import android.content.Context;
@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import java.util.List;
+
+import jp.ac.it_college.std.reachable_client.R;
 
 public class S3ObjectsListAdapter extends ArrayAdapter<S3ObjectSummary> {
 

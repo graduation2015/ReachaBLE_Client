@@ -1,4 +1,4 @@
-package jp.ac.it_college.std.reachable_client;
+package jp.ac.it_college.std.reachable_client.json;
 
 import android.content.Context;
 
@@ -20,7 +20,7 @@ public class JsonDataReader {
      * @param is
      * @return
      */
-    protected String getJsonStr(InputStream is) {
+    public String getJsonStr(InputStream is) {
         String json = null;
         try {
             int size = is.available();

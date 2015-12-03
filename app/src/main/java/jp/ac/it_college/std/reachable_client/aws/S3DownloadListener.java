@@ -1,4 +1,4 @@
-package jp.ac.it_college.std.reachable_client;
+package jp.ac.it_college.std.reachable_client.aws;
 
 import android.util.Log;
 

@@ -1,4 +1,4 @@
-package jp.ac.it_college.std.reachable_client;
+package jp.ac.it_college.std.reachable_client.aws;
 
 
 import android.content.AsyncTaskLoader;
@@ -6,6 +6,8 @@ import android.content.Context;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
+
+import jp.ac.it_college.std.reachable_client.Constants;
 
 public class S3GetObjectListAsyncTaskLoader extends AsyncTaskLoader<ObjectListing> {
     private Context mContext;
