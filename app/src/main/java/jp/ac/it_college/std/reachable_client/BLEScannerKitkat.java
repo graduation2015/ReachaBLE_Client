@@ -18,8 +18,8 @@ public class BLEScannerKitkat {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private DownloadService downloadService;
-    private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private boolean isScanning;
+    private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private Context context;
 
     private BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {

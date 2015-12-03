@@ -43,8 +43,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     private List<String> list;
 
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -94,6 +92,28 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
 
     private void showCategorySingleChoiceDialog() {
         singleChoiceDialog.show(getFragmentManager(), "singleChoice");
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.filter_btn:
+                showCategorySingleChoiceDialog();
+                break;
+            case R.id.start_btn:
+                Intent intent = new Intent(getActivity(), DownloadService.class);
+                getActivity().startService(intent);
+                break;
+            case R.id.stop_btn:
+                getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+                bluetoothDisable();
+                break;
+            case R.id.update_btn:
+                updateList();
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
@@ -195,27 +215,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
         new File(IMAGE_PATH).mkdirs();
         new File(JSON_PATH).mkdirs();
 
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.filter_btn:
-                showCategorySingleChoiceDialog();
-                break;
-            case R.id.start_btn:
-                Intent intent = new Intent(getActivity(), DownloadService.class);
-                getActivity().startService(intent);
-                break;
-            case R.id.stop_btn:
-                getActivity().stopService(new Intent(getActivity(), DownloadService.class));
-                break;
-            case R.id.update_btn:
-                updateList();
-                break;
-            default:
-                break;
-        }
     }
 
     private String getCheckedCategory() {

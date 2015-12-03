@@ -1,6 +1,7 @@
 package jp.ac.it_college.std.reachable_client;
 
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -26,6 +27,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import jp.ac.it_college.std.reachable_client.aws.AwsUtil;
@@ -35,8 +38,11 @@ public class DownloadService extends Service {
     private List<BluetoothDevice> deviceList = new ArrayList<>();
     private Context context;
     private BluetoothGatt bluetoothGatt;
+    private BluetoothAdapter bt;
     private int mStatus;
     private AmazonS3Client s3Client;
+    private Timer timer = new Timer();
+
 
     public static final String SERVICE_UUID_YOU_CAN_CHANGE = "0000180a-0000-1000-8000-00805f9b34fb";
     public static final String CHAR_UUID_YOU_CAN_CHANGE = "00002a29-0000-1000-8000-00805f9b34fb";
@@ -44,6 +50,7 @@ public class DownloadService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        bluetoothSetUp();
         context = getApplicationContext();
 
         Log.v("test", "create");
@@ -52,7 +59,8 @@ public class DownloadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v("test","start");
-        scanStart();
+        timer.schedule(new CheckBluetoothEnable(), 500, 1000);
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -108,7 +116,22 @@ public class DownloadService extends Service {
         }
     };
 
+    private void bluetoothSetUp() {
+        bt = BluetoothAdapter.getDefaultAdapter();
+
+        if (bt == null) {
+            return;
+        }
+        if (!bt.isEnabled()) {
+            bt.enable();
+//            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
     private void scanStart() {
+
+        timer.cancel();
         List<ScanFilter> fillter = new ArrayList<>();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -139,7 +162,12 @@ public class DownloadService extends Service {
     private BluetoothGattCharacteristic getCharacteristic() {
         BluetoothGattService service = bluetoothGatt
                 .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
+        while (service == null) {
+            service = bluetoothGatt
+                    .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
+        }
         Log.i("test", "gatt service: " + service);
+
         return service
                 .getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
     }
@@ -171,11 +199,11 @@ public class DownloadService extends Service {
             try {
                 bluetoothGatt.readCharacteristic(getCharacteristic());
             } catch (Exception e) {
-                Log.e("test", e.toString(), e);
+                Log.e("test", "readCharacteristic : " + e.toString(), e);
                 disconnect();
             }
         } else {
-            Log.v("test","null");
+            Log.v("test","gatt is null");
             disconnect();
         }
     }
@@ -193,6 +221,7 @@ public class DownloadService extends Service {
         Log.v("test", "gets3key");
         this.context = context;
         connect(context, device);
+
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -261,6 +290,21 @@ public class DownloadService extends Service {
         @Override
         public void onError(int i, Exception e) {
             Log.e("test", String.valueOf(i), e);
+        }
+    }
+
+    private class CheckBluetoothEnable extends TimerTask {
+
+        @Override
+        public void run() {
+            switch (bt.getState()) {
+                case BluetoothAdapter.STATE_ON:
+                    scanStart();
+                    break;
+                default:
+                    break;
+            }
+            Log.v("test", String.valueOf(bt.getState()));
         }
     }
 }
