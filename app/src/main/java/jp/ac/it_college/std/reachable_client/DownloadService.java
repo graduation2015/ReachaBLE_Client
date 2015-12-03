@@ -193,13 +193,16 @@ public class DownloadService extends Service {
         }
     }
 
-    private void readCharacteristic() {
+    private void readCharacteristic(BluetoothDevice device) {
         Log.v("test","read");
+        //dviceListにdeviceを追加
+        BleDeviceListManager.saveDevice(device);
         if (mStatus == BluetoothGatt.GATT_SUCCESS && bluetoothGatt != null) {
             try {
                 bluetoothGatt.readCharacteristic(getCharacteristic());
             } catch (Exception e) {
                 Log.e("test", "readCharacteristic : " + e.toString(), e);
+                BleDeviceListManager.undoDeviceList(device);
                 disconnect();
             }
         } else {
@@ -217,7 +220,7 @@ public class DownloadService extends Service {
 //        ((ImageView) contentView.findViewById(R.id.img_response)).setImageBitmap(decodeBytes(bytes));
     }
 
-    public void getS3Key(Context context, BluetoothDevice device) {
+    public void getS3Key(Context context, final BluetoothDevice device) {
         Log.v("test", "gets3key");
         this.context = context;
         connect(context, device);
@@ -225,7 +228,7 @@ public class DownloadService extends Service {
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                readCharacteristic();
+                readCharacteristic(device);
             }
         }, 3000);
     }

@@ -2,6 +2,7 @@ package jp.ac.it_college.std.reachable_client;
 
 import android.app.ListFragment;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -105,6 +106,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 getActivity().startService(intent);
                 break;
             case R.id.stop_btn:
+                BleDeviceListManager.deviceList = new ArrayList<>();
                 getActivity().stopService(new Intent(getActivity(), DownloadService.class));
                 bluetoothDisable();
                 break;
