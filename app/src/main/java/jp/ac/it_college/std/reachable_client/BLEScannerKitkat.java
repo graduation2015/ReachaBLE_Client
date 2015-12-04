@@ -24,7 +24,7 @@ public class BLEScannerKitkat {
     private BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (!BleDeviceListManager.isAdded(device)) {
+            if (!new BleDeviceListManager().isAdded(device)) {
 //                saveDevice(device);
                 Log.v("test", device.toString());
                 //TODO:Download処理

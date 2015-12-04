@@ -6,10 +6,13 @@ import java.util.ArrayList;
 
 //TODO:改良
 public class BleDeviceListManager {
-    public static ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
+    private static ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
 
+    public ArrayList getDeviceList() {
+        return deviceList;
+    }
     // スキャンしたデバイスのリスト保存
-    public static void saveDevice(BluetoothDevice device) {
+    public void saveDevice(BluetoothDevice device) {
         if (deviceList == null) {
             deviceList = new ArrayList<>();
         }
@@ -17,12 +20,16 @@ public class BleDeviceListManager {
     }
 
     // スキャンしたデバイスがリストに追加済みかどうかの確認
-    public static boolean isAdded(BluetoothDevice device) {
+    public boolean isAdded(BluetoothDevice device) {
         return deviceList.contains(device);
     }
 
     // 登録したデバイスからnullが返ってきたとき、デバイスリストから削除する
-    public static void undoDeviceList(BluetoothDevice device) {
+    public void undoDeviceList(BluetoothDevice device) {
         deviceList.remove(device);
+    }
+
+    public void resetList() {
+        deviceList = new ArrayList<>();
     }
 }

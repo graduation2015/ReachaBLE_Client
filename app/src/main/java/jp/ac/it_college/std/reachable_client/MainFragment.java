@@ -106,7 +106,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 getActivity().startService(intent);
                 break;
             case R.id.stop_btn:
-                BleDeviceListManager.deviceList = new ArrayList<>();
+                new BleDeviceListManager().resetList();
                 getActivity().stopService(new Intent(getActivity(), DownloadService.class));
                 bluetoothDisable();
                 break;
@@ -145,15 +145,13 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 JsonDataReader reader = new JsonDataReader();
                 jsonStr = reader.getJsonStr(new FileInputStream(downloadJsonPath));
 
-                JSONObject dwonloadJson = new JSONObject(jsonStr).getJSONObject(key);
+                JSONObject downloadJson = new JSONObject(jsonStr).getJSONObject(key);
 
                 jsonManager = new JsonManager(getActivity());
-                JSONObject rootJson = jsonManager.getJsonRootObject().put(key, dwonloadJson);
+                JSONObject rootJson = jsonManager.getJsonRootObject().put(key, downloadJson);
 
                 jsonManager.putJsonObj(rootJson);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
+            } catch (JSONException | FileNotFoundException e) {
                 e.printStackTrace();
             }
         }

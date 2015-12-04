@@ -59,7 +59,7 @@ public class BLEScannerLolipop extends ScanCallback {
         super.onScanResult(callbackType, result);
 
         if (result != null && result.getDevice() != null) {
-            if (!BleDeviceListManager.isAdded(result.getDevice())) {
+            if (!new BleDeviceListManager().isAdded(result.getDevice())) {
                 //TODO:Download処理
                 downloadService.getS3Key(context, result.getDevice());
             }
