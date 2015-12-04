@@ -2,6 +2,7 @@ package jp.ac.it_college.std.reachable_client;
 
 import android.app.ListFragment;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -41,8 +42,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
 
 //    public static final String TAGS_PATH;
     private List<String> list;
-
-
 
 
     @Override
@@ -97,6 +96,29 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     }
 
     @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.filter_btn:
+                showCategorySingleChoiceDialog();
+                break;
+            case R.id.start_btn:
+                Intent intent = new Intent(getActivity(), DownloadService.class);
+                getActivity().startService(intent);
+                break;
+            case R.id.stop_btn:
+                new BleDeviceListManager().resetList();
+                getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+                bluetoothDisable();
+                break;
+            case R.id.update_btn:
+                updateList();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -123,15 +145,13 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 JsonDataReader reader = new JsonDataReader();
                 jsonStr = reader.getJsonStr(new FileInputStream(downloadJsonPath));
 
-                JSONObject dwonloadJson = new JSONObject(jsonStr).getJSONObject(key);
+                JSONObject downloadJson = new JSONObject(jsonStr).getJSONObject(key);
 
                 jsonManager = new JsonManager(getActivity());
-                JSONObject rootJson = jsonManager.getJsonRootObject().put(key, dwonloadJson);
+                JSONObject rootJson = jsonManager.getJsonRootObject().put(key, downloadJson);
 
                 jsonManager.putJsonObj(rootJson);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
+            } catch (JSONException | FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -195,27 +215,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
         new File(IMAGE_PATH).mkdirs();
         new File(JSON_PATH).mkdirs();
 
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.filter_btn:
-                showCategorySingleChoiceDialog();
-                break;
-            case R.id.start_btn:
-                Intent intent = new Intent(getActivity(), DownloadService.class);
-                getActivity().startService(intent);
-                break;
-            case R.id.stop_btn:
-                getActivity().stopService(new Intent(getActivity(), DownloadService.class));
-                break;
-            case R.id.update_btn:
-                updateList();
-                break;
-            default:
-                break;
-        }
     }
 
     private String getCheckedCategory() {

@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ListView;
 
@@ -43,7 +44,8 @@ public class MainActivity extends AppCompatActivity
 //        setUpDrawerList();
         setUpToolbar();
 //        initAWSClient();
-        bluetoothSetUp();
+        //bluetooth on/off
+//        bluetoothSetUp();
     }
 
     @Override
@@ -77,19 +79,6 @@ public class MainActivity extends AppCompatActivity
 //        setSupportActionBar(mToolbar);
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 //        getSupportActionBar().setHomeButtonEnabled(true);
-    }
-
-    private void bluetoothSetUp() {
-        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
-
-        if (bt == null) {
-            return;
-        }
-
-        if (!bt.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
     }
 
 /*

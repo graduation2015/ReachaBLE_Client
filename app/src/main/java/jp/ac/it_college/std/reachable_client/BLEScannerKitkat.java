@@ -18,15 +18,14 @@ public class BLEScannerKitkat {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private DownloadService downloadService;
-    private ArrayList<BluetoothDevice> deviceList = new ArrayList<>();
     private boolean isScanning;
     private Context context;
 
     private BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (!isAdded(device)) {
-                saveDevice(device);
+            if (!new BleDeviceListManager().isAdded(device)) {
+//                saveDevice(device);
                 Log.v("test", device.toString());
                 //TODO:Download処理
                 Log.i("test", "context: " + context);
@@ -60,19 +59,5 @@ public class BLEScannerKitkat {
             mBluetoothAdapter.stopLeScan(callback);
             isScanning = false;
         }
-    }
-
-    // スキャンしたデバイスがリストに追加済みかどうかの確認
-    public boolean isAdded(BluetoothDevice device) {
-        return deviceList.contains(device);
-    }
-
-    // スキャンしたデバイスのリスト保存
-    public void saveDevice(BluetoothDevice device) {
-        if (deviceList == null) {
-            deviceList = new ArrayList<>();
-        }
-
-        deviceList.add(device);
     }
 }
