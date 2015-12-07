@@ -196,8 +196,6 @@ public class DownloadService extends Service {
     private void readCharacteristic(BluetoothDevice device) {
         Log.v("test","read");
         BleDeviceListManager deviceManager = new BleDeviceListManager();
-        //dviceListにdeviceを追加
-        deviceManager.saveDevice(device);
         if (mStatus == BluetoothGatt.GATT_SUCCESS && bluetoothGatt != null) {
             try {
                 bluetoothGatt.readCharacteristic(getCharacteristic());
@@ -207,7 +205,7 @@ public class DownloadService extends Service {
                 disconnect();
             }
         } else {
-            Log.v("test","gatt is null");
+            Log.v("test", "gatt is null");
             disconnect();
         }
     }

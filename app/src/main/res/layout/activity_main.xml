@@ -30,7 +30,7 @@
             android:layout_height="match_parent" />
 
     </LinearLayout>
-
+<!--
     <LinearLayout
         android:id="@+id/left_drawer"
         android:layout_width="240dp"
@@ -46,5 +46,5 @@
             android:divider="@android:color/transparent"
             android:dividerHeight="0dp" />
 
-    </LinearLayout>
+    </LinearLayout>-->
 </android.support.v4.widget.DrawerLayout>

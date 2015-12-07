@@ -2,7 +2,6 @@ package jp.ac.it_college.std.reachable_client;
 
 import android.app.ListFragment;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,6 +11,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ToggleButton;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +39,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     private List<String> filterItems = new ArrayList<>();
     private List<String> checkedCategories = new ArrayList<>();
     private ChoiceDialog singleChoiceDialog;
+    private ToggleButton serviceToggle;
 
 //    public static final String TAGS_PATH;
     private List<String> list;
@@ -60,7 +61,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
 
         singleChoiceDialog = ChoiceDialog.newInstance(this, new CategorySingleChoiceDialog());
 
-
         View contentView = inflater.inflate(R.layout.fragment_main, container, false);
         findViews(contentView);
 
@@ -69,9 +69,14 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
 
     private void findViews(View contentView) {
         contentView.findViewById(R.id.filter_btn).setOnClickListener(this);
-        contentView.findViewById(R.id.start_btn).setOnClickListener(this);
-        contentView.findViewById(R.id.stop_btn).setOnClickListener(this);
         contentView.findViewById(R.id.update_btn).setOnClickListener(this);
+        serviceToggle = (ToggleButton) contentView.findViewById(R.id.service_toggle);
+        serviceToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bleServiceToggle();
+            }
+        });
     }
 
     private void setDownLoads(List<String> list) {
@@ -101,15 +106,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
             case R.id.filter_btn:
                 showCategorySingleChoiceDialog();
                 break;
-            case R.id.start_btn:
-                Intent intent = new Intent(getActivity(), DownloadService.class);
-                getActivity().startService(intent);
-                break;
-            case R.id.stop_btn:
-                new BleDeviceListManager().resetList();
-                getActivity().stopService(new Intent(getActivity(), DownloadService.class));
-                bluetoothDisable();
-                break;
             case R.id.update_btn:
                 updateList();
                 break;
@@ -133,6 +129,17 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                     }
                     break;
             }
+        }
+    }
+
+    private void bleServiceToggle() {
+        if (serviceToggle.isChecked()) {
+            Intent intent = new Intent(getActivity(), DownloadService.class);
+            getActivity().startService(intent);
+        } else {
+            new BleDeviceListManager().resetList();
+            getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+            bluetoothDisable();
         }
     }
 
@@ -220,4 +227,5 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     private String getCheckedCategory() {
         return checkedCategory;
     }
+
 }

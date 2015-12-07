@@ -15,12 +15,5 @@
             android:layout_weight="0.5"
             />
 
-        <TextView
-            android:id="@+id/lbl_file_name"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_weight="0.5"
-            />
-
     </LinearLayout>
 </LinearLayout>
