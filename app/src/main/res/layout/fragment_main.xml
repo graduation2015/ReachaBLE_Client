@@ -14,28 +14,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:clickable="true"
             android:text="@string/filter"/>
-        <Button
-            android:id="@+id/start_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+
+        <ToggleButton
+            android:id="@+id/service_toggle"
             android:layout_weight="1"
-            android:clickable="true"
-            android:text="@string/start_btn"/>
-        <Button
-            android:id="@+id/stop_btn"
+            android:textOn="stop" android:textOff="start"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:clickable="true"
-            android:text="@string/finish_btn"/>
+            android:layout_height="wrap_content" />
         <Button
             android:id="@+id/update_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:clickable="true"
             android:text="@string/update"/>
     </LinearLayout>
 

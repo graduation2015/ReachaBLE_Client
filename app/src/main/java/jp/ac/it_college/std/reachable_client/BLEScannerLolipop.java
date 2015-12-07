@@ -57,10 +57,10 @@ public class BLEScannerLolipop extends ScanCallback {
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         super.onScanResult(callbackType, result);
-
+        BleDeviceListManager deviceManager = new BleDeviceListManager();
         if (result != null && result.getDevice() != null) {
-            if (!new BleDeviceListManager().isAdded(result.getDevice())) {
-                //TODO:Download処理
+            if (!deviceManager.isAdded(result.getDevice())) {
+                deviceManager.saveDevice(result.getDevice());
                 downloadService.getS3Key(context, result.getDevice());
             }
         }

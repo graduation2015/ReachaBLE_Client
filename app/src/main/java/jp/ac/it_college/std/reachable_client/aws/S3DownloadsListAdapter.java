@@ -40,14 +40,9 @@ public class S3DownloadsListAdapter extends ArrayAdapter<Bitmap> {
 
         if (bitmap != null) {
             ImageView imageView = (ImageView) view.findViewById(R.id.image_view_downloads);
-            TextView fileName = (TextView) view.findViewById(R.id.lbl_file_name);
 
             if (imageView != null) {
                 imageView.setImageBitmap(bitmap);
-            }
-
-            if (fileName != null) {
-                fileName.setText(bitmap.getConfig().name());
             }
         }
 
