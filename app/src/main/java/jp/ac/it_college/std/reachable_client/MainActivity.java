@@ -1,9 +1,15 @@
 package jp.ac.it_college.std.reachable_client;
+import android.app.ActionBar;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.app.LoaderManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
@@ -11,28 +17,37 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.amazonaws.auth.AWSCredentials;
 
+import java.util.List;
+
 import jp.ac.it_college.std.reachable_client.aws.AWSClientManager;
+import jp.ac.it_college.std.reachable_client.json.CouponInfo;
+import jp.ac.it_college.std.reachable_client.json.JsonManager;
 
 public class MainActivity extends AppCompatActivity
-            implements LoaderManager.LoaderCallbacks<AWSCredentials> {
+            implements CouponDetailsFragment.OnFragmentInteractionListener, MainFragment.ChangeFragmentListener, LoaderManager.LoaderCallbacks<AWSCredentials>{
 
 
     private String[] mPlanetTitles;
-    private ListView mDrawerList;
-    private DrawerLayout mDrawerLayout;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
-    private ActionBarDrawerToggle mDrawerToggle;
     private Toolbar mToolbar;
     private AWSClientManager mClientManager;
     private ProgressDialogFragment mDialogFragment;
     private final int REQUEST_ENABLE_BT = 0x01;
-
+    private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private Fragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +58,6 @@ public class MainActivity extends AppCompatActivity
         findViews();
 //        setUpDrawerList();
         setUpToolbar();
-//        initAWSClient();
-        //bluetooth on/off
-//        bluetoothSetUp();
     }
 
     @Override
@@ -65,7 +77,16 @@ public class MainActivity extends AppCompatActivity
 //        if (mDrawerToggle.onOptionsItemSelected(item)) {
 //            return true;
 //        }
-        return super.onOptionsItemSelected(item);
+        boolean result = true;
+        switch (item.getItemId()) {
+            case R.id.home:
+                fragment = new MainFragment();
+                getFragmentManager().beginTransaction().replace(R.id.container_content, fragment).commit();
+                break;
+            default:
+                result = super.onOptionsItemSelected(item);
+        }
+        return result;
     }
 
     private void findViews() {
@@ -76,14 +97,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setUpToolbar() {
-//        setSupportActionBar(mToolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeButtonEnabled(true);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
-/*
 
     private void setUpDrawerList() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
         mTitle = mDrawerTitle = getTitle();
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar
                 ,R.string.drawer_open, R.string.drawer_close) {
@@ -97,22 +119,12 @@ public class MainActivity extends AppCompatActivity
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
                 //ドロワーを閉じた時に呼ばれる
-
             }
         };
+        mDrawerToggle.setDrawerIndicatorEnabled(false);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, mPlanetTitles));
-        // Set the list's click listener
-//        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
     }
-*/
 
-    private void initAWSClient() {
-        getLoaderManager().restartLoader(0, null, this);
-    }
 
     private void initFragment(Bundle savedInstanceState) {
         if (savedInstanceState == null) {
@@ -156,7 +168,34 @@ public class MainActivity extends AppCompatActivity
     public void onLoaderReset(Loader<AWSCredentials> loader) {
 
     }
-/*
+
+    @Override
+    public void goToCouponDetails(String key, int index) {
+        new CouponDetailsDialog(this, key, index).show();
+/*        fragment = new CouponDetailsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("key", key);
+        bundle.putInt("index", index);
+        fragment.setArguments(bundle);
+
+        getFragmentManager().beginTransaction().replace(R.id.container_content, fragment).addToBackStack(null).commit();*/
+    }
+
+    @Override
+    public void onFragmentInteraction() {
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        int backStackCnt = getSupportFragmentManager().getBackStackEntryCount();
+        if (backStackCnt != 0) {
+            getSupportFragmentManager().popBackStack();
+        }
+    }
+
+    /*
 
     private class DrawerItemClickListener implements android.widget.AdapterView.OnItemClickListener {
 
@@ -184,15 +223,14 @@ public class MainActivity extends AppCompatActivity
 
 
 
-*/
-/*            Fragment fragment = getFragment(position);
+            Fragment fragment = getFragment(position);
             getFragmentManager().beginTransaction()
                     .replace(R.id.container_content, fragment)
                     .commit();
 
             mDrawerList.setItemChecked(position, true);
             setTitle(mPlanetTitles[position]);
-            mDrawerLayout.closeDrawers();*//*
+            mDrawerLayout.closeDrawers();
 
         }
 
@@ -206,5 +244,4 @@ public class MainActivity extends AppCompatActivity
         }
     }
 */
-
 }

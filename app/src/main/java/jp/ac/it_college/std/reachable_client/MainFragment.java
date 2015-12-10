@@ -1,5 +1,6 @@
 package jp.ac.it_college.std.reachable_client;
 
+import android.app.Activity;
 import android.app.ListFragment;
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
@@ -11,6 +12,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.ToggleButton;
 
 import org.json.JSONException;
@@ -44,6 +46,22 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
 //    public static final String TAGS_PATH;
     private List<String> list;
 
+    //Fragmentで受け取ったイベントをActivityへ投げる
+    private ChangeFragmentListener listener = null;
+    public interface ChangeFragmentListener {
+        void goToCouponDetails(String key, int index);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (!(activity instanceof ChangeFragmentListener)) {
+            throw new UnsupportedOperationException(
+                    "Listener is not Implementation.");
+        } else {
+            listener = (ChangeFragmentListener) activity;
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,6 +69,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
         mkdir();
 
         setListAdapter(new S3DownloadsListAdapter(getActivity(), R.layout.row_s3_downloads, items));
+
         list = Arrays.asList(new File(IMAGE_PATH).list());
         Collections.reverse(list);
 
@@ -115,6 +134,17 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     }
 
     @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+
+        String key = list.get((int) id);
+        if(listener != null) {
+            listener.goToCouponDetails(key, list.indexOf(key));
+        }
+
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -123,6 +153,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 case DialogInterface.BUTTON_POSITIVE:
                     setCategories(data);
                     if (checkedCategory.equals("All")) {
+                        filterItems = list;
                         setDownLoads(list);
                     } else {
                         loadJSON();
