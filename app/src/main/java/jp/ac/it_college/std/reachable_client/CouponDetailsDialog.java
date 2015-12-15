@@ -23,6 +23,12 @@ public class CouponDetailsDialog extends Dialog{
 
     private ImageView imageView;
 
+    /**
+     * 受け取った引数で画像の詳細を当てはめる
+     * @param context
+     * @param key 画像名
+     * @param index 押されたリストのid
+     */
     public CouponDetailsDialog(Context context, String key, int index) {
         super(context);
 

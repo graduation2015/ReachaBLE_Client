@@ -1,5 +1,8 @@
 package jp.ac.it_college.std.reachable_client;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -16,6 +19,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
@@ -129,6 +134,10 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * androidのバージョンごとにBLEを起動させる記述が違うので
+     * androidのバージョンがLOLIPOP(5.x系)かKITKAT(4.x系)を判別し、バージョンにあった記述でBLEを起動させる
+     */
     private void scanStart() {
 
         timer.cancel();
@@ -149,6 +158,9 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * BLEを停止させる
+     */
     private void scanStop() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             BLEScannerLolipop bleScanner = new BLEScannerLolipop(context);
@@ -159,6 +171,10 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * していされたUUIDを使ってBluetoothGattServiceを作成
+     * @return
+     */
     private BluetoothGattCharacteristic getCharacteristic() {
         BluetoothGattService service = bluetoothGatt
                 .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
@@ -172,12 +188,20 @@ public class DownloadService extends Service {
                 .getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
     }
 
+    /**
+     * BLEを飛ばしている機器に接続する
+     * @param context
+     * @param device
+     */
     public void connect(Context context, BluetoothDevice device) {
         Log.v("test", "connect");
         bluetoothGatt = device.connectGatt(context, false, mGattCallback);
         bluetoothGatt.connect();
     }
 
+    /**
+     * 接続を切る
+     */
     public void disconnect() {
         Log.v("test","disconnect");
         if (bluetoothGatt != null) {
@@ -193,6 +217,10 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * 接続した機器から文字列を取得
+     * @param device
+     */
     private void readCharacteristic(BluetoothDevice device) {
         Log.v("test","read");
         BleDeviceListManager deviceManager = new BleDeviceListManager();
@@ -210,6 +238,10 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * 取得した文字列を使ってAWSのS3から画像とjsonファイルを取得するメソッドへ飛ばす
+     * @param characteristic
+     */
     private void handleCharacteristic(BluetoothGattCharacteristic characteristic) {
         byte[] bytes = characteristic.getValue();
         String msg = new String(bytes);
@@ -219,6 +251,11 @@ public class DownloadService extends Service {
 //        ((ImageView) contentView.findViewById(R.id.img_response)).setImageBitmap(decodeBytes(bytes));
     }
 
+    /**
+     * BLEを飛ばしている機器が見つかったら[接続]→[文字列取得]→[切断]
+     * @param context
+     * @param device
+     */
     public void getS3Key(Context context, final BluetoothDevice device) {
         Log.v("test", "gets3key");
         this.context = context;
@@ -232,10 +269,15 @@ public class DownloadService extends Service {
         }, 3000);
     }
 
+    /**
+     * 取得した文字列を使ってS3から画像とjsonファイルをダウンロードする
+     * ２つのファイルが取得できたらプッシュ通知をする
+     */
+    int count;
     private void beginDownload(String msg) {
         String imagePath = MainFragment.IMAGE_PATH;
         String jsonPath =  MainFragment.JSON_PATH;
-
+        count = 0;
 //        TransferUtility utility = new TransferUtility(s3Client, context);
 
         TransferUtility utility = AwsUtil.getTransferUtility(context);
@@ -259,6 +301,9 @@ public class DownloadService extends Service {
         observer.setTransferListener(new S3DownloadListener());
     }
 
+    /**
+     * S3からダウンロードしている間の状態を取得する
+     */
     private class S3DownloadListener implements TransferListener {
         private static final String DIALOG_TITLE = "Download";
         private static final String DIALOG_MESSAGE = "Downloading...";
@@ -272,6 +317,23 @@ public class DownloadService extends Service {
 //                    mDialogFragment.show(getFragmentManager(), "tag_downloading");
                     break;
                 case COMPLETED:
+                    if ( ++count >= 2 ) {
+                        //プッシュ通知
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+                        builder.setSmallIcon(R.drawable.notification_template_icon_bg);
+
+                        builder.setContentTitle("クーポンを取得しました"); // 1行目
+                        builder.setContentText("タップしてクーポンの確認"); // 2行目
+
+                        Intent intent = new Intent(context, MainActivity.class);
+                        PendingIntent contentIntent = PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_ONE_SHOT);
+                        builder.setContentIntent(contentIntent);
+
+                        builder.setAutoCancel(true);
+
+                        NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+                        manager.notify(1, builder.build());
+                    }
 //                    mDialogFragment.dismiss();
 //                    Toast.makeText(getActivity(), "Download completed.", Toast.LENGTH_SHORT).show();
                     break;
@@ -295,8 +357,10 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * デバイスのBluetoothをONにして、使える状態になるまで待機、その後BLEのserviceを起動する
+     */
     private class CheckBluetoothEnable extends TimerTask {
-
         @Override
         public void run() {
             switch (bt.getState()) {

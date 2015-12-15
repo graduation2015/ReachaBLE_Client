@@ -169,6 +169,11 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    /**
+     * 画像の詳細をダイアログで表示
+     * @param key
+     * @param index
+     */
     @Override
     public void goToCouponDetails(String key, int index) {
         new CouponDetailsDialog(this, key, index).show();
