@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jp.ac.it_college.std.reachable_client.R;
+import jp.ac.it_college.std.reachable_client.json.CouponInfo;
+import jp.ac.it_college.std.reachable_client.json.JsonManager;
 
 public class S3DownloadsListAdapter extends ArrayAdapter<Bitmap> {
     private List<Bitmap> items = new ArrayList<>();
@@ -44,6 +46,20 @@ public class S3DownloadsListAdapter extends ArrayAdapter<Bitmap> {
             if (imageView != null) {
                 imageView.setImageBitmap(bitmap);
             }
+        }
+
+        JsonManager manager = new JsonManager(context);
+        List<CouponInfo> list = manager.getCouponInfoList();
+        CouponInfo couponInfo = list.get(position);
+
+        TextView companyNameLabel = (TextView) view.findViewById(R.id.company_name_lbl);
+        if (companyNameLabel != null) {
+            companyNameLabel.setText(couponInfo.getCompanyName());
+        }
+
+        TextView addressNameLabel = (TextView) view.findViewById(R.id.address_lbl);
+        if (addressNameLabel != null) {
+            addressNameLabel.setText(couponInfo.getAddress());
         }
 
         return view;

@@ -25,7 +25,7 @@ public class JsonDataWriter {
 
     private JSONObject writeData(CouponInfo info) throws JSONException {
         JSONObject data = new JSONObject();
-        data.put(CouponInfo.NAME, info.getName());
+        data.put(CouponInfo.NAME, info.getCompanyName());
         data.put(CouponInfo.ADDRESS, info.getAddress());
         data.put(CouponInfo.CATEGORY, new JSONArray(info.getCategory()));
 

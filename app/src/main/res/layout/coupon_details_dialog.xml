@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
+    android:layout_margin="30dp"
+    android:background="#FFFFFF"
     android:orientation="vertical">
 
     <ImageView
@@ -13,12 +15,12 @@
 
     <ScrollView
         android:id="@+id/scrollView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="3">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <TextView
@@ -45,10 +47,8 @@
                 android:layout_height="match_parent" />
 
             <TextView
-                android:id="@+id/infomation"
-                android:text="あああああああああああああああああああああああああああああああああああああああああんんんんんんん
-                あああああああああああああああああああああああああああああああああああああああああんんんんんんん
-                あああああああああああああああああああああああああああああああああああああああああんんんんんんん"
+                android:id="@+id/description"
+                android:text="あ"
                 android:textSize="20dp"
                 android:layout_margin="10dp"
                 android:layout_width="match_parent"
@@ -56,13 +56,19 @@
 
         </LinearLayout>
     </ScrollView>
-    <Button
-        android:id="@+id/ok_btn"
-        android:text="OK"
-        android:layout_below="@id/scrollView"
-        android:layout_gravity="center_horizontal|top"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+
+    <RelativeLayout
         android:layout_weight="0"
-        />
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/ok_btn"
+            android:text="OK"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
+
 </LinearLayout>

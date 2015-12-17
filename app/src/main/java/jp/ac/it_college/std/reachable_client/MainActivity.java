@@ -12,6 +12,9 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -176,7 +179,11 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void goToCouponDetails(String key, int index) {
-        new CouponDetailsDialog(this, key, index).show();
+        //TODO:dialogを表示
+        CouponDetailsDialog dialog = new CouponDetailsDialog().newInstance(key, index);
+        dialog.show(getFragmentManager(), "CouponDetailDialog");
+
+//        new CouponDetailsDialog(this, key, index).show();
 /*        fragment = new CouponDetailsFragment();
         Bundle bundle = new Bundle();
         bundle.putString("key", key);
