@@ -40,4 +40,8 @@ public class CouponInfo {
     public List<String> getCategory() {
         return category;
     }
+
+    public String getMetaData () {
+        return key + name + address + description;
+    }
 }

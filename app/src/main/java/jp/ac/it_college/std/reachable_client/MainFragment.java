@@ -2,23 +2,29 @@ package jp.ac.it_college.std.reachable_client;
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.ListFragment;
+import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.ToggleButton;
-
-import com.amazonaws.mobileconnectors.s3.transfermanager.Download;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,32 +33,40 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import jp.ac.it_college.std.reachable_client.aws.S3DownloadsListAdapter;
+import jp.ac.it_college.std.reachable_client.json.CouponController;
 import jp.ac.it_college.std.reachable_client.json.CouponInfo;
 import jp.ac.it_college.std.reachable_client.json.JsonDataReader;
 import jp.ac.it_college.std.reachable_client.json.JsonManager;
 
-public class MainFragment extends ListFragment implements View.OnClickListener{
+public class MainFragment extends Fragment implements View.OnClickListener
+        , SwipeRefreshLayout.OnRefreshListener{
 
-    private List<Bitmap> items = new ArrayList<>();
     public static String IMAGE_PATH;
     public static String JSON_PATH;
     private String checkedCategory;
     private JsonManager jsonManager;
-    private List<String> filterItems = new ArrayList<>();
-    private List<String> checkedCategories = new ArrayList<>();
+    private List<String> saveList = new ArrayList<>();
     private ChoiceDialog singleChoiceDialog;
     private ToggleButton serviceToggle;
+    private LinearLayout cardLinear;
+    private LayoutInflater inflater;
+    private List<String> list = new ArrayList<>();
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private SearchView searchView;
+    private RecyclerViewAdapter recyclerViewAdapter;
 
-//    public static final String TAGS_PATH;
-    private List<String> list;
+
+    public static boolean detailDialogFlag = true;
 
     //Fragmentで受け取ったイベントをActivityへ投げる
     private ChangeFragmentListener listener = null;
+
     public interface ChangeFragmentListener {
         void goToCouponDetails(String key, int index);
     }
@@ -72,12 +86,26 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mkdir();
+        setHasOptionsMenu(true);
 
-        setListAdapter(new S3DownloadsListAdapter(getActivity(), R.layout.row_s3_downloads, items));
 
-        list = Arrays.asList(new File(IMAGE_PATH).list());
+//        setListAdapter(new S3DownloadsListAdapter(getActivity(), R.layout.row_s3_downloads, items));
+
+        this.inflater = inflater;
+
+        Collections.addAll(list, new File(IMAGE_PATH).list());
         Collections.reverse(list);
+        saveList.addAll(list);
 
+        View contentView = inflater.inflate(R.layout.fragment_main, container, false);
+
+        cardLinear = (LinearLayout) contentView.findViewById(R.id.cardLinear);
+
+        mRecyclerView = (RecyclerView) contentView.findViewById(R.id.my_recycler_view);
+        // コンテンツの変化でRecyclerViewのサイズが変わらない場合は、
+        // パフォーマンスを向上させることができる
+        mRecyclerView.setHasFixedSize(true);
+        setSearchView(list);
         setDownLoads(list);
         updateInfoJson(list);
 
@@ -85,7 +113,6 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
 
         singleChoiceDialog = ChoiceDialog.newInstance(this, new CategorySingleChoiceDialog());
 
-        View contentView = inflater.inflate(R.layout.fragment_main, container, false);
         findViews(contentView);
 
         checkServiceRunning(getActivity(), DownloadService.class);
@@ -94,7 +121,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     }
 
     private void findViews(View contentView) {
-        contentView.findViewById(R.id.filter_btn).setOnClickListener(this);
+/*        contentView.findViewById(R.id.filter_btn).setOnClickListener(this);
         contentView.findViewById(R.id.update_btn).setOnClickListener(this);
         serviceToggle = (ToggleButton) contentView.findViewById(R.id.service_toggle);
         serviceToggle.setOnClickListener(new View.OnClickListener() {
@@ -102,7 +129,42 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
             public void onClick(View v) {
                 bleServiceToggle();
             }
+        });*/
+        mSwipeRefreshLayout = (SwipeRefreshLayout) contentView.findViewById(R.id.contentView);
+
+        // 色設定
+/*        mSwipeRefreshLayout.setColorSchemeResources(R.color.red,
+                R.color.green, R.color.blue,
+                R.color.orange);*/
+        // Listenerをセット
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+
+
+    }
+
+    private void setSearchView(List<String> list) {
+        cardLinear.removeAllViews();
+
+        // LinearLayoutManagerを使用する
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        // アダプタを指定する
+        mAdapter = new RecyclerViewAdapter(getActivity(), list);
+        recyclerViewAdapter = (RecyclerViewAdapter) mAdapter;
+        recyclerViewAdapter.setOnClickCardViewListener(new RecyclerViewAdapter.OnClickCardView() {
+            @Override
+            public void exec(String key) {
+                if (CouponDetailsDialog.dialogFlag) {
+                    CouponDetailsDialog.dialogFlag = false;
+                    int index = recyclerViewAdapter.getPosition(key);
+                    CouponDetailsDialog dialog = new CouponDetailsDialog().newInstance(key, index);
+                    dialog.show(getFragmentManager(), "CouponDetailDialog");
+                }
+            }
         });
+        mRecyclerView.setAdapter(mAdapter);
+//        mRecyclerView.setAdapter(recyclerViewAdapter);
     }
 
     /**
@@ -110,23 +172,95 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
      * @param list
      */
     private void setDownLoads(List<String> list) {
-        items.clear();
-
-        for (String name : list) {
-            Bitmap bitmap = BitmapFactory.decodeFile(IMAGE_PATH + "/" + name);
-            items.add(bitmap);
-        }
-        ((S3DownloadsListAdapter) getListAdapter()).notifyDataSetChanged();
+        mAdapter.notifyDataSetChanged();
     }
 
     /**
-     * 更新ボタンを押された時にリストを更新し、新しくダウンロードした画像を表示
+     * 更新時にリストを更新し、新しくダウンロードした画像を表示
      */
     private void updateList() {
-        list = Arrays.asList(new File(IMAGE_PATH).list());
+        list = new ArrayList<>();
+        Collections.addAll(list, new File(IMAGE_PATH).list());
         Collections.reverse(list);
-        setDownLoads(list);
+        recyclerViewAdapter.addList(list);
+        mAdapter.notifyDataSetChanged();
         updateInfoJson(list);
+    }
+
+    private boolean searchCoupon(String searchKey) {
+        List<CouponInfo> couponInfoList = jsonManager.getCouponInfoList();
+        String[] queryArray = searchKey.split(" ", 0);
+        recyclerViewAdapter.itemReset();
+        for (String name : list) {
+            CouponInfo couponInfo = couponInfoList.get(list.indexOf(name));
+            for (String queryKey : queryArray) {
+                if (recyclerViewAdapter.containsVisible(name) && !couponInfo.getMetaData().contains(queryKey)) {
+                    recyclerViewAdapter.searchResult(name);
+                }
+            }
+        }
+
+        mAdapter.notifyDataSetChanged();
+//        list = tmpList;
+        searchView.clearFocus();
+        return true;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_toolbar, menu);
+        final MenuItem searchMenu = menu.findItem(R.id.menu_search);
+
+        searchView = (SearchView) searchMenu.getActionView();
+
+//        MenuItemCompat.setOnActionExpandListener(item, this);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return searchCoupon(query);
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    //SearchViewからフォーカスが外れた際にメニューを閉じる
+                    searchMenu.collapseActionView();
+                }
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                updateList();
+                Log.v("test", "update");
+                return false;
+            }
+        });
+
+
+        final MenuItem bleToggle = menu.findItem(R.id.menu_switch);
+        SwitchCompat switchCompat = (SwitchCompat) bleToggle.getActionView();
+        switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Intent intent = new Intent(getActivity(), DownloadService.class);
+                    getActivity().startService(intent);
+                } else {
+                    new BleDeviceListManager().resetList();
+                    getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+                    bluetoothDisable();
+                }
+            }
+        });
     }
 
     /**
@@ -139,24 +273,18 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.filter_btn:
+/*            case R.id.filter_btn:
                 showCategorySingleChoiceDialog();
                 break;
             case R.id.update_btn:
                 updateList();
-                break;
+                break;*/
             default:
                 break;
         }
     }
 
-    /**
-     * リストに表示されている画像をタップするとActivityにイベントを投げて詳細のダイアログを表示する
-     * @param l
-     * @param v
-     * @param position 上から何番目の画像が押されたかを取得
-     * @param id
-     */
+/*
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
@@ -167,6 +295,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
         }
 
     }
+*/
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -177,7 +306,7 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
                 case DialogInterface.BUTTON_POSITIVE:
                     setCategories(data);
                     if (checkedCategory.equals("All")) {
-                        filterItems = list;
+//                        saveList = list;
                         setDownLoads(list);
                     } else {
                         loadJSON();
@@ -206,6 +335,13 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
      * @param list
      */
     private void updateInfoJson(List<String> list) {
+        CouponController controller = new CouponController();
+        try {
+            controller.checkCouponDate(getActivity(), list);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
         for (String key : list) {
             String jsonStr;
             File downloadJsonPath = new File(MainFragment.JSON_PATH, key + ".json");
@@ -247,21 +383,21 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
      */
     private void loadJSON() {
         JSONObject rootObject = jsonManager.getJsonRootObject();
-        executeCategoryFilter(rootObject);
+//        executeCategoryFilter(rootObject);
     }
 
     /**
      * フィルターを実行してリストを更新
      * @param rootObject
      */
-    private void executeCategoryFilter(JSONObject rootObject) {
-        filterItems.clear();
+/*    private void executeCategoryFilter(JSONObject rootObject) {
+        saveList.clear();
 //        jsonManager.executeFilter(rootObject, getFilter(), CouponInfo.CATEGORY, items);
         jsonManager.executeFilter(
-                rootObject, getCheckedCategory(), CouponInfo.CATEGORY, filterItems);
+                rootObject, getCheckedCategory(), CouponInfo.CATEGORY, saveList);
 
-        setDownLoads(filterItems);
-    }
+        setDownLoads(saveList);
+    }*/
 
     /**
      * 端末側のBluetoothをOFFにする
@@ -328,5 +464,18 @@ public class MainFragment extends ListFragment implements View.OnClickListener{
             }
         }
         return false;
+    }
+
+    @Override
+    public void onRefresh() {
+        updateList();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // 更新が終了したらインジケータ非表示
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 500);
     }
 }

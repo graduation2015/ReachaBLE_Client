@@ -33,6 +33,7 @@ import jp.ac.it_college.std.reachable_client.json.JsonManager;
 public class CouponDetailsDialog extends DialogFragment {
     public static final String KEY = "key";
     public static final String INDEX = "index";
+    public static boolean dialogFlag = true;
 
     public static CouponDetailsDialog newInstance(String key, int index){
         CouponDetailsDialog dialogFragment = new CouponDetailsDialog();
@@ -82,6 +83,8 @@ public class CouponDetailsDialog extends DialogFragment {
         dialog.findViewById(R.id.ok_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                MainFragment.detailDialogFlag = !MainFragment.detailDialogFlag;
+                dialogFlag = true;
                 dismiss();
             }
         });

@@ -1,44 +1,30 @@
 package jp.ac.it_college.std.reachable_client;
-import android.app.ActionBar;
 import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.app.LoaderManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.widget.CompoundButton;
 
 import com.amazonaws.auth.AWSCredentials;
 
-import java.util.List;
-
 import jp.ac.it_college.std.reachable_client.aws.AWSClientManager;
-import jp.ac.it_college.std.reachable_client.json.CouponInfo;
-import jp.ac.it_college.std.reachable_client.json.JsonManager;
 
 public class MainActivity extends AppCompatActivity
-            implements CouponDetailsFragment.OnFragmentInteractionListener, MainFragment.ChangeFragmentListener, LoaderManager.LoaderCallbacks<AWSCredentials>{
+            implements MainFragment.ChangeFragmentListener, LoaderManager.LoaderCallbacks<AWSCredentials> {
 
 
     private String[] mPlanetTitles;
@@ -51,6 +37,9 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private Fragment fragment;
+    private SearchView mSearchView;
+    private SwitchCompat switchCompat;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +48,7 @@ public class MainActivity extends AppCompatActivity
 
         initFragment(savedInstanceState);
         findViews();
-//        setUpDrawerList();
+//        setUpDrawer();
         setUpToolbar();
     }
 
@@ -86,6 +75,8 @@ public class MainActivity extends AppCompatActivity
                 fragment = new MainFragment();
                 getFragmentManager().beginTransaction().replace(R.id.container_content, fragment).commit();
                 break;
+            case R.id.switchForActionBar:
+                Log.v("test", "switch touched");
             default:
                 result = super.onOptionsItemSelected(item);
         }
@@ -101,8 +92,47 @@ public class MainActivity extends AppCompatActivity
 
     private void setUpToolbar() {
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setHomeButtonEnabled(true);
+
+/*        mToolbar.inflateMenu(R.menu.menu_toolbar);
+
+        switchCompat = (SwitchCompat) mToolbar.findViewById(R.id.switchForActionBar);
+        switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Intent intent = new Intent(getApplicationContext(), DownloadService.class);
+                    startService(intent);
+                } else {
+                    new BleDeviceListManager().resetList();
+                    stopService(new Intent(getApplicationContext(), DownloadService.class));
+                    bluetoothDisable();
+                }
+            }
+        });*/
+
+/*        mSearchView = (SearchView) mToolbar.getMenu().findItem(R.id.menu_search).getActionView();
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+            @Override
+            public boolean onQueryTextChange(String s) {
+                return false;
+            }
+        });
+
+        mSearchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    //SearchViewからフォーカスが外れた際にメニューを閉じる
+                    mToolbar.collapseActionView();
+                }
+            }
+        });*/
     }
 
 
@@ -128,6 +158,17 @@ public class MainActivity extends AppCompatActivity
         mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
 
+    private void bluetoothDisable() {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+
+        if (bt == null) {
+            return;
+        }
+
+        if (bt.isEnabled()) {
+            bt.disable();
+        }
+    }
 
     private void initFragment(Bundle savedInstanceState) {
         if (savedInstanceState == null) {
@@ -179,11 +220,9 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void goToCouponDetails(String key, int index) {
-        //TODO:dialogを表示
         CouponDetailsDialog dialog = new CouponDetailsDialog().newInstance(key, index);
         dialog.show(getFragmentManager(), "CouponDetailDialog");
 
-//        new CouponDetailsDialog(this, key, index).show();
 /*        fragment = new CouponDetailsFragment();
         Bundle bundle = new Bundle();
         bundle.putString("key", key);
@@ -193,10 +232,6 @@ public class MainActivity extends AppCompatActivity
         getFragmentManager().beginTransaction().replace(R.id.container_content, fragment).addToBackStack(null).commit();*/
     }
 
-    @Override
-    public void onFragmentInteraction() {
-
-    }
 
     @Override
     public void onBackPressed() {
@@ -206,6 +241,7 @@ public class MainActivity extends AppCompatActivity
             getSupportFragmentManager().popBackStack();
         }
     }
+
 
     /*
 

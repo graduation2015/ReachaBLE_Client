@@ -29,7 +29,10 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.services.s3.AmazonS3Client;
 
+import org.json.JSONException;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -37,6 +40,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 import jp.ac.it_college.std.reachable_client.aws.AwsUtil;
+import jp.ac.it_college.std.reachable_client.json.CouponController;
 
 
 public class DownloadService extends Service {
@@ -47,6 +51,7 @@ public class DownloadService extends Service {
     private int mStatus;
     private AmazonS3Client s3Client;
     private Timer timer = new Timer();
+    private String key;
 
 
     public static final String SERVICE_UUID_YOU_CAN_CHANGE = "0000180a-0000-1000-8000-00805f9b34fb";
@@ -172,7 +177,7 @@ public class DownloadService extends Service {
     }
 
     /**
-     * していされたUUIDを使ってBluetoothGattServiceを作成
+     * 指定されたUUIDを使ってBluetoothGattServiceを作成
      * @return
      */
     private BluetoothGattCharacteristic getCharacteristic() {
@@ -275,6 +280,7 @@ public class DownloadService extends Service {
      */
     int count;
     private void beginDownload(String msg) {
+        key = msg;
         String imagePath = MainFragment.IMAGE_PATH;
         String jsonPath =  MainFragment.JSON_PATH;
         count = 0;
@@ -318,6 +324,16 @@ public class DownloadService extends Service {
                     break;
                 case COMPLETED:
                     if ( ++count >= 2 ) {
+
+                        CouponController controller = new CouponController();
+                        try {
+                            controller.addCouponDownloadDate(context, key);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
                         //プッシュ通知
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
                         builder.setSmallIcon(R.drawable.notification_template_icon_bg);
