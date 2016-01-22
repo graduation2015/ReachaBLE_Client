@@ -48,9 +48,17 @@ public class BLEScannerLolipop extends ScanCallback {
 
     //スキャン停止
     public void stopScan() {
+
         if (mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(this);
             isScanning = false;
+            if (mBluetoothAdapter == null) {
+                return;
+            }
+
+            if (mBluetoothAdapter.isEnabled()) {
+                mBluetoothAdapter.disable();
+            }
         }
     }
 

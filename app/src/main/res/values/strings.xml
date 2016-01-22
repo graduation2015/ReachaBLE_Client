@@ -40,5 +40,6 @@
     <string name="select_coupon">クーポン詳細</string>
     <string name="search">検索</string>
     <string name="bluetooth">Bluetooth</string>
+    <integer name="tag_company_name">0</integer>
 
 </resources>

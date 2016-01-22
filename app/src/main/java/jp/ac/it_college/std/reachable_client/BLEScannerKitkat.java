@@ -50,7 +50,6 @@ public class BLEScannerKitkat {
     public void startScan() {
         // スキャンフィルタを設定するならこちら
         mBluetoothAdapter.startLeScan(callback);
-
         isScanning = true;
     }
 
@@ -59,6 +58,7 @@ public class BLEScannerKitkat {
         if (mBluetoothLeScanner != null) {
             mBluetoothAdapter.stopLeScan(callback);
             isScanning = false;
+            mBluetoothAdapter.disable();
         }
     }
 }

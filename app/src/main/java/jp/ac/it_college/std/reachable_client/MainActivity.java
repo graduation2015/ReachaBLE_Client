@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void goToCouponDetails(String key, int index) {
-        CouponDetailsDialog dialog = new CouponDetailsDialog().newInstance(key, index);
+        CouponDetailsDialog dialog = new CouponDetailsDialog().newInstance(getApplicationContext(), key, index);
         dialog.show(getFragmentManager(), "CouponDetailDialog");
 
 /*        fragment = new CouponDetailsFragment();

@@ -4,6 +4,7 @@ import java.util.List;
 
 public class CouponInfo {
     private final String key;
+    private final String title;
     private final String name;
     private final String address;
     private final String description;
@@ -15,8 +16,9 @@ public class CouponInfo {
     public static final String DESCRIPTION = "description";
     public static final String TITLE = "title";
 
-    public CouponInfo(String key, String name, String address, String description, List<String> category) {
+    public CouponInfo(String key, String title, String name, String address, String description, List<String> category) {
         this.key = key;
+        this.title = title;
         this.name = name;
         this.address = address;
         this.category = category;
@@ -26,6 +28,8 @@ public class CouponInfo {
     public String getKey() {
         return key;
     }
+
+    public String getTitle() { return title; }
 
     public String getCompanyName() {
         return name;
@@ -42,6 +46,10 @@ public class CouponInfo {
     }
 
     public String getMetaData () {
-        return key + name + address + description;
+        String categorys = "";
+        for (String hoge : category) {
+            categorys += hoge + " ";
+        }
+        return key + name + address + description + categorys;
     }
 }

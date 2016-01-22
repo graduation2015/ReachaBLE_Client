@@ -121,10 +121,11 @@ public class JsonDataSelector {
     }
 
     private CouponInfo createCouponInfo(String key, JSONObject object) {
-        String name = null, address = null, description = null;
+        String title = null, name = null, address = null, description = null;
         List<String> category = new ArrayList<>();
         try {
             name = object.getString(CouponInfo.NAME);
+            title = object.getString(CouponInfo.TITLE);
             address  = object.getString(CouponInfo.ADDRESS);
             description = object.getString(CouponInfo.DESCRIPTION);
             category = createList(object.getJSONArray(CouponInfo.CATEGORY));
@@ -132,7 +133,7 @@ public class JsonDataSelector {
             e.printStackTrace();
         }
 
-        return new CouponInfo(key, name, address, description, category);
+        return new CouponInfo(key, title, name, address, description, category);
     }
 
     private List<String> createList(JSONArray category) {

@@ -12,8 +12,11 @@
         android:icon="@drawable/abc_switch_thumb_material"
         android:title="@string/bluetooth"
         app:actionLayout="@layout/menu_switch_layout"
-        app:showAsAction="always"
-
-        />
-
-    </menu>
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/menu_view_toggle"
+        android:icon="@drawable/ic_view_quilt_black_24dp"
+        android:title="表示切り替え"
+        android:actionLayout="@layout/menu_view_toggle_layout"
+        app:showAsAction="always"/>
+</menu>

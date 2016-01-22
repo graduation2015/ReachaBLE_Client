@@ -2,7 +2,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <android.support.v7.widget.CardView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -11,8 +10,9 @@
         android:layout_gravity="center"
         android:padding="25dp"
         android:layout_margin="10dp"
-        android:elevation="10dp"
-        card_view:cardBackgroundColor="#aaaaff"
+        android:elevation="15dp"
+        card_view:cardBackgroundColor="@color/primary"
+        card_view:cardUseCompatPadding="true"
         card_view:cardCornerRadius="8dp">
 
         <LinearLayout
@@ -22,6 +22,7 @@
             <!-- カードに載せる情報 -->
             <ImageView
                 android:id="@+id/img"
+                android:scaleType="centerCrop"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="3"
@@ -32,15 +33,12 @@
                 android:layout_height="match_parent"
                 android:layout_weight="9"
                 android:orientation="horizontal">
+
                 <TextView
-                    android:text="会社名 : "
-                    android:layout_weight="3"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-                <TextView
-                    android:id="@+id/text"
+                    android:id="@+id/coupon_title_label"
                     android:text="hoge"
                     android:textSize="20dp"
+                    android:singleLine="true"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"/>
@@ -52,19 +50,14 @@
                 android:layout_weight="9"
                 android:orientation="horizontal">
                 <TextView
-                    android:text="住所 : "
-                    android:layout_weight="3"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-                <TextView
-                    android:id="@+id/text2"
+                    android:id="@+id/company_name_label"
                     android:text="fuga"
+                    android:singleLine="true"
+                    android:drawableStart="@drawable/ic_perm_identity_black_24dp"
                     android:textSize="20dp"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"/>
+                    android:layout_height="match_parent"/>
             </LinearLayout>
         </LinearLayout>
-
     </android.support.v7.widget.CardView>
 </LinearLayout>

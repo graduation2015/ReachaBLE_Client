@@ -14,8 +14,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="3"
+            android:scaleType="centerCrop"
             android:background="@color/primary"
-            android:layout_gravity="center_horizontal|top"
             android:contentDescription="@string/select_coupon" />
 
         <ScrollView
@@ -32,77 +32,109 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="horizontal">
-                    <TextView
-                        android:text="会社名 : "
-                        android:layout_margin="10dp"
-                        android:layout_weight="2"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                    <TextView
-                        android:id="@+id/company_name"
-                        android:text="hoge"
-                        android:textSize="20dp"
-                        android:layout_weight="1"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
 
+                    <TextView
+                        android:id="@+id/coupon_title"
+                        android:textSize="25dp"
+                        android:gravity="bottom"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
                     android:orientation="horizontal">
                     <TextView
-                        android:text="住所 : "
-                        android:layout_margin="10dp"
-                        android:layout_weight="2"
+                        android:id="@+id/company_name"
+                        android:text="hoge"
+                        android:textSize="20dp"
+                        android:gravity="bottom"
+                        android:drawableStart="@drawable/ic_perm_identity_black_24dp"
+                        android:drawablePadding="20dp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
+                </LinearLayout>
+                <include layout="@layout/divider" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
                     <TextView
                         android:id="@+id/address"
                         android:text="東京"
                         android:textSize="20dp"
-                        android:layout_weight="1"
+                        android:drawablePadding="20dp"
+                        android:gravity="bottom"
+                        android:drawableStart="@drawable/ic_directions_black_24dp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
                 </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-                <TextView
-                    android:text="電話番号 : "
-                    android:layout_margin="10dp"
-                    android:layout_weight="2"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-                <TextView
-                    android:id="@+id/phone_number"
-                    android:text="0120-828-828"
-                    android:textSize="20dp"
-                    android:layout_weight="1"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </LinearLayout>
+                <include layout="@layout/divider" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-                <TextView
-                    android:text="詳細 : "
-                    android:layout_margin="10dp"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-                <TextView
-                    android:id="@+id/description"
-                    android:text="あ"
-                    android:textSize="20dp"
-                    android:layout_margin="10dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </LinearLayout>
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/phone_number"
+                        android:text="0120-828-828"
+                        android:textSize="20dp"
+                        android:drawablePadding="20dp"
+                        android:gravity="bottom"
+                        android:drawableStart="@drawable/ic_phone_black_24dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </LinearLayout>
+                <include layout="@layout/divider" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_marginBottom="5dp"
+                        android:gravity="bottom"
+                        android:drawableStart="@drawable/ic_description_black_24dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                    <TextView
+                        android:id="@+id/description"
+                        android:text="あ"
+                        android:textSize="20dp"
+                        android:gravity="bottom"
+                        android:layout_marginLeft="20dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </LinearLayout>
+                <include layout="@layout/divider" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_marginBottom="5dp"
+                        android:gravity="bottom"
+                        android:drawableStart="@drawable/ic_label_black_24dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                    <TextView
+                        android:id="@+id/categorys"
+                        android:text="あ"
+                        android:textSize="20dp"
+                        android:gravity="bottom"
+                        android:layout_marginLeft="20dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </LinearLayout>
+                <include layout="@layout/divider" />
             </LinearLayout>
         </ScrollView>
 

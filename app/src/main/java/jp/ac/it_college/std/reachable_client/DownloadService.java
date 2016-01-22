@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanFilter;
@@ -50,7 +51,7 @@ public class DownloadService extends Service {
     private BluetoothAdapter bt;
     private int mStatus;
     private AmazonS3Client s3Client;
-    private Timer timer = new Timer();
+    private Timer timer;
     private String key;
 
 
@@ -69,7 +70,8 @@ public class DownloadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v("test","start");
-        timer.schedule(new CheckBluetoothEnable(), 500, 1000);
+        timer = new Timer();
+        timer.schedule(new CheckBluetoothEnable(), 500, 3000);
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -107,6 +109,38 @@ public class DownloadService extends Service {
             super.onServicesDiscovered(gatt, status);
             bluetoothGatt = gatt;
             mStatus = status;
+
+/*            if (status == BluetoothGatt.GATT_SUCCESS) {
+                BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
+                if (service == null) {
+                    // サービスが見つからなかった
+                } else {
+                    // サービスを見つけた
+                    BluetoothGattCharacteristic characteristic =
+                            service.getCharacteristic(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
+                    if (characteristic == null) {
+                        // キャラクタリスティックが見つからなかった
+                    } else {
+                        // キャラクタリスティックを見つけた
+
+                        // Notification を要求する
+                        boolean registered = gatt.setCharacteristicNotification(characteristic, true);
+
+                        // Characteristic の Notification 有効化
+                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                                UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        gatt.writeDescriptor(descriptor);
+
+                        if (registered) {
+                            // Characteristics通知設定が成功
+                        } else {
+                            // Characteristics通知設定が失敗
+                        }
+                    }
+                }
+            }*/
+
         }
 
         @Override
@@ -143,23 +177,26 @@ public class DownloadService extends Service {
      * androidのバージョンごとにBLEを起動させる記述が違うので
      * androidのバージョンがLOLIPOP(5.x系)かKITKAT(4.x系)を判別し、バージョンにあった記述でBLEを起動させる
      */
+    private BLEScannerLolipop bleScannerLolipop;
+    private BLEScannerKitkat bleScannerKitkat;
     private void scanStart() {
 
         timer.cancel();
+
         List<ScanFilter> fillter = new ArrayList<>();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BLEScannerLolipop blescanner = new BLEScannerLolipop(context);
+            bleScannerLolipop = new BLEScannerLolipop(context);
 
             ScanSettings.Builder settingsBuilder = new ScanSettings.Builder();
             settingsBuilder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
 
             ScanSettings settings = settingsBuilder.build();
 
-            blescanner.startScan(fillter, settings);
+            bleScannerLolipop.startScan(fillter, settings);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            BLEScannerKitkat blescanner = new BLEScannerKitkat(context);
-            blescanner.startScan();
+            bleScannerKitkat = new BLEScannerKitkat(context);
+            bleScannerKitkat.startScan();
         }
     }
 
@@ -168,11 +205,9 @@ public class DownloadService extends Service {
      */
     private void scanStop() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            BLEScannerLolipop bleScanner = new BLEScannerLolipop(context);
-            bleScanner.stopScan();
+            bleScannerLolipop.stopScan();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            BLEScannerKitkat bleScanner = new BLEScannerKitkat(context);
-            bleScanner.stopScan();
+            bleScannerKitkat.stopScan();
         }
     }
 
@@ -183,14 +218,14 @@ public class DownloadService extends Service {
     private BluetoothGattCharacteristic getCharacteristic() {
         BluetoothGattService service = bluetoothGatt
                 .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
-        while (service == null) {
+/*        while (service == null) {
             service = bluetoothGatt
                     .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
-        }
+        }*/
         Log.i("test", "gatt service: " + service);
 
-        return service
-                .getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
+        return characteristic;
     }
 
     /**
@@ -199,7 +234,7 @@ public class DownloadService extends Service {
      * @param device
      */
     public void connect(Context context, BluetoothDevice device) {
-        Log.v("test", "connect");
+        Log.v("test", "connect to " + device);
         bluetoothGatt = device.connectGatt(context, false, mGattCallback);
         bluetoothGatt.connect();
     }
@@ -227,7 +262,7 @@ public class DownloadService extends Service {
      * @param device
      */
     private void readCharacteristic(BluetoothDevice device) {
-        Log.v("test","read");
+        Log.v("test","read " + bluetoothGatt);
         BleDeviceListManager deviceManager = new BleDeviceListManager();
         if (mStatus == BluetoothGatt.GATT_SUCCESS && bluetoothGatt != null) {
             try {
@@ -252,7 +287,7 @@ public class DownloadService extends Service {
         String msg = new String(bytes);
         Log.v("test", msg);
         beginDownload(msg);
-
+        disconnect();
 //        ((ImageView) contentView.findViewById(R.id.img_response)).setImageBitmap(decodeBytes(bytes));
     }
 
@@ -381,6 +416,7 @@ public class DownloadService extends Service {
         public void run() {
             switch (bt.getState()) {
                 case BluetoothAdapter.STATE_ON:
+
                     scanStart();
                     break;
                 default:
