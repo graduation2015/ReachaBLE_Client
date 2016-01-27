@@ -70,9 +70,9 @@ public class DownloadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v("test","start");
+//        beginDownload("company01");
         timer = new Timer();
         timer.schedule(new CheckBluetoothEnable(), 500, 3000);
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -371,7 +371,7 @@ public class DownloadService extends Service {
 
                         //プッシュ通知
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-                        builder.setSmallIcon(R.drawable.notification_template_icon_bg);
+                        builder.setSmallIcon(R.drawable.icon_reachable);
 
                         builder.setContentTitle("クーポンを取得しました"); // 1行目
                         builder.setContentText("タップしてクーポンの確認"); // 2行目

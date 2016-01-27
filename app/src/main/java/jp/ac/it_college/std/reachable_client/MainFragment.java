@@ -3,13 +3,14 @@ package jp.ac.it_college.std.reachable_client;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Fragment;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -25,7 +26,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import org.json.JSONException;
@@ -34,6 +34,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,11 +50,8 @@ public class MainFragment extends Fragment implements View.OnClickListener
     public static String IMAGE_PATH;
     public static String JSON_PATH;
 
-    private String checkedCategory;
     private JsonManager jsonManager;
     private List<String> saveList = new ArrayList<>();
-    private ChoiceDialog singleChoiceDialog;
-    private ToggleButton serviceToggle;
     private LinearLayout cardLinear;
     private LayoutInflater inflater;
     private List<String> list = new ArrayList<>();
@@ -65,27 +63,7 @@ public class MainFragment extends Fragment implements View.OnClickListener
     private SwitchCompat bleServiceToggle;
     private RecyclerViewAdapter recyclerViewAdapter;
     private ToggleButton viewToggle;
-
-
-    public static boolean detailDialogFlag = true;
-
-    //Fragmentで受け取ったイベントをActivityへ投げる
-    private ChangeFragmentListener listener = null;
-
-    public interface ChangeFragmentListener {
-        void goToCouponDetails(String key, int index);
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if (!(activity instanceof ChangeFragmentListener)) {
-            throw new UnsupportedOperationException(
-                    "Listener is not Implementation.");
-        } else {
-            listener = (ChangeFragmentListener) activity;
-        }
-    }
+    private List<CouponInfo> couponInfoList;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -93,12 +71,9 @@ public class MainFragment extends Fragment implements View.OnClickListener
         mkdir();
         setHasOptionsMenu(true);
 
-//        setListAdapter(new S3DownloadsListAdapter(getActivity(), R.layout.row_s3_downloads, items));
-
         this.inflater = inflater;
 
         Collections.addAll(list, new File(IMAGE_PATH).list());
-        Collections.reverse(list);
         saveList.addAll(list);
 
         View contentView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -109,63 +84,43 @@ public class MainFragment extends Fragment implements View.OnClickListener
         // コンテンツの変化でRecyclerViewのサイズが変わらない場合は、
         // パフォーマンスを向上させることができる
         mRecyclerView.setHasFixedSize(true);
+
         setSearchView(list);
         setDownLoads(list);
         updateInfoJson(list);
 
         jsonManager = new JsonManager(getActivity());
-
-        singleChoiceDialog = ChoiceDialog.newInstance(this, new CategorySingleChoiceDialog());
+        couponInfoList = jsonManager.getCouponInfoList();
 
         findViews(contentView);
         return contentView;
     }
 
     private void findViews(View contentView) {
-/*        contentView.findViewById(R.id.filter_btn).setOnClickListener(this);
-        contentView.findViewById(R.id.update_btn).setOnClickListener(this);
-        serviceToggle = (ToggleButton) contentView.findViewById(R.id.service_toggle);
-        serviceToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bleServiceToggle();
-            }
-        });*/
-/*        serviceToggle = (ToggleButton) contentView.findViewById(R.id.service_toggle);
-        serviceToggle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (serviceToggle.isChecked()) {
-                    mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(
-                            2, StaggeredGridLayoutManager.VERTICAL));
-                } else {
-                    mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-                }
-            }
-        });*/
         mSwipeRefreshLayout = (SwipeRefreshLayout) contentView.findViewById(R.id.contentView);
 
         // 色設定
-/*        mSwipeRefreshLayout.setColorSchemeResources(R.color.red,
-                R.color.green, R.color.blue,
-                R.color.orange);*/
+
         // Listenerをセット
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
 
     }
 
-/*
-    public EmptySupportRecyclerView getCouponListView() {
-        if (mCouponListView == null) {
-            mCouponListView = (EmptySupportRecyclerView) getContentView().findViewById(R.id.coupon_list);
-            //リストが空の際に表示するViewをセット
-            mCouponListView.setEmptyView(getEmptyView());
-        }
-        return mCouponListView;
-    }
-*/
+    private ActivityOptionsCompat makeSharedElementOptions(View view) {
+        View toolbar = ((MainActivity) getActivity()).getToolbar();
+        View image = view.findViewById(R.id.img);
+        View title = view.findViewById(R.id.coupon_title_label);
+        View companyName = view.findViewById(R.id.company_name_label);
 
+        return ActivityOptionsCompat.makeSceneTransitionAnimation(
+                getActivity(),
+                new Pair<View, String>(toolbar, getString(R.string.transition_toolbar)),
+                new Pair<View, String>(image, getString(R.string.transition_img)),
+                new Pair<View, String>(title, getString(R.string.transition_title)),
+                new Pair<View, String>(companyName, getString(R.string.transition_company_name))
+        );
+    }
     private void setSearchView(List<String> list) {
         cardLinear.removeAllViews();
 
@@ -178,19 +133,15 @@ public class MainFragment extends Fragment implements View.OnClickListener
         recyclerViewAdapter = (RecyclerViewAdapter) mAdapter;
         recyclerViewAdapter.setOnClickCardViewListener(new RecyclerViewAdapter.OnClickCardView() {
             @Override
-            public void exec(String key) {
-                if (CouponDetailsDialog.dialogFlag) {
-                    searchView.onActionViewCollapsed();
-                    CouponDetailsDialog.dialogFlag = false;
-                    int index = recyclerViewAdapter.getPosition(key);
-                    CouponDetailsDialog dialog = new CouponDetailsDialog().newInstance(getActivity(), key, index);
-                    dialog.show(getFragmentManager(), "CouponDetailDialog");
+            public void exec(int index, View view) {
+                Intent intent = new Intent(getActivity(), CouponDetailActivity.class);
+                intent.putExtra(CouponDetailActivity.SELECTED_ITEM, (Serializable) couponInfoList.get(index));
+                intent.putExtra(CouponDetailActivity.SELECTED_ITEM_POSITION, index);
+                ActivityCompat.startActivity(getActivity(), intent, makeSharedElementOptions(view).toBundle());
 
-                }
             }
         });
         mRecyclerView.setAdapter(mAdapter);
-//        mRecyclerView.setAdapter(recyclerViewAdapter);
     }
 
     /**
@@ -207,7 +158,7 @@ public class MainFragment extends Fragment implements View.OnClickListener
     private void updateList() {
         list = new ArrayList<>();
         Collections.addAll(list, new File(IMAGE_PATH).list());
-        Collections.reverse(list);
+//        Collections.reverse(list);
         recyclerViewAdapter.addList(list);
         searchView.onActionViewCollapsed();
         mAdapter.notifyDataSetChanged();
@@ -215,7 +166,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
     }
 
     private boolean searchCoupon(String searchKey) {
-        List<CouponInfo> couponInfoList = jsonManager.getCouponInfoList();
         String[] queryArray = searchKey.split(" ", 0);
         recyclerViewAdapter.itemReset();
         for (String name : list) {
@@ -228,7 +178,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
         }
 
         mAdapter.notifyDataSetChanged();
-//        list = tmpList;
         searchView.clearFocus();
         return true;
     }
@@ -240,7 +189,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
 
         final MenuItem searchMenu = menu.findItem(R.id.menu_search);
         searchView = (SearchView) searchMenu.getActionView();
-//        MenuItemCompat.setOnActionExpandListener(item, this);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -252,15 +200,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
                 return false;
             }
         });
-/*        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    //SearchViewからフォーカスが外れた際にメニューを閉じる
-                    searchView.onActionViewCollapsed();
-                }
-            }
-        });*/
 
         searchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
@@ -277,14 +216,12 @@ public class MainFragment extends Fragment implements View.OnClickListener
         bleServiceToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                bleServiceToggle.setClickable(false);
                 if (isChecked && bleServiceToggle.getLinksClickable()) {
                     Intent intent = new Intent(getActivity(), DownloadService.class);
                     getActivity().startService(intent);
                 } else {
                     new BleDeviceListManager().resetList();
                     getActivity().stopService(new Intent(getActivity(), DownloadService.class));
-//                    bluetoothDisable();
                 }
             }
         });
@@ -308,13 +245,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
         });
     }
 
-    /**
-     * 絞り込みボタンを押された時にカテゴリー選択のダイアログを表示
-     */
-    private void showCategorySingleChoiceDialog() {
-        singleChoiceDialog.show(getFragmentManager(), "singleChoice");
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -329,51 +259,11 @@ public class MainFragment extends Fragment implements View.OnClickListener
         }
     }
 
-/*
-    @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
-
-        String key = list.get((int) id);
-        if(listener != null) {
-            listener.goToCouponDetails(key, list.indexOf(key));
-        }
-
-    }
-*/
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CategorySingleChoiceDialog.REQUEST_ITEMS) {
-            switch (resultCode) {
-                case DialogInterface.BUTTON_POSITIVE:
-                    setCategories(data);
-                    if (checkedCategory.equals("All")) {
-//                        saveList = list;
-                        setDownLoads(list);
-                    } else {
-                        loadJSON();
-                    }
-                    break;
-            }
-        }
     }
-
-    /**
-     * トグルボタンが押された時の状態を受け取ってDownloadServiceを起動または停止する
-     */
-/*    private void bleServiceToggle() {
-        if (serviceToggle.isChecked()) {
-            Intent intent = new Intent(getActivity(), DownloadService.class);
-            getActivity().startService(intent);
-        } else {
-            new BleDeviceListManager().resetList();
-            getActivity().stopService(new Intent(getActivity(), DownloadService.class));
-            bluetoothDisable();
-        }
-    }*/
 
     /**
      * Activity起動時または更新ボタンを押されたときにダウンロードされたjsonファイルを読み込んでinfo.jsonファイルにまとめる
@@ -408,79 +298,16 @@ public class MainFragment extends Fragment implements View.OnClickListener
     }
 
     /**
-     * ダイアログで選択したカテゴリをセット
-     * @param data
-     */
-    private void setCategories(Intent data) {
-/*
-        //Multiple用
-        List<String> checkedCategories = data.getStringArrayListExtra(CategoryMultipleChoiceDialog.CHECKED_ITEMS);
-        this.checkedCategories.clear();
-        this.checkedCategories.addAll(checkedCategories);
-*/
-
-        //Single用
-        this.checkedCategory = data.getStringExtra(CategorySingleChoiceDialog.CHECKED_ITEMS);
-    }
-
-    /**
-     * フィルターを実行してJSONを読み込む
-     */
-    private void loadJSON() {
-        JSONObject rootObject = jsonManager.getJsonRootObject();
-//        executeCategoryFilter(rootObject);
-    }
-
-    /**
-     * フィルターを実行してリストを更新
-     * @param rootObject
-     */
-/*    private void executeCategoryFilter(JSONObject rootObject) {
-        saveList.clear();
-//        jsonManager.executeFilter(rootObject, getFilter(), CouponInfo.CATEGORY, items);
-        jsonManager.executeFilter(
-                rootObject, getCheckedCategory(), CouponInfo.CATEGORY, saveList);
-
-        setDownLoads(saveList);
-    }*/
-
-    /**
-     * 端末側のBluetoothをOFFにする
-     */
-    private void bluetoothDisable() {
-        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
-
-        if (bt == null) {
-            return;
-        }
-
-        if (bt.isEnabled()) {
-            bt.disable();
-        }
-    }
-
-    /**
      * 初回起動時に必要なディレクトリを作成
      */
     private void mkdir() {
 
-   /*     File file = new File(getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES).getPath());
-        file.mkdirs();*/
         IMAGE_PATH = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES).getPath();
         JSON_PATH = getActivity().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath();
         new File(IMAGE_PATH).mkdirs();
         new File(JSON_PATH).mkdirs();
 
     }
-
-    /**
-     * 絞り込みで選択したカテゴリーを返す
-     * @return
-     */
-    private String getCheckedCategory() {
-        return checkedCategory;
-    }
-
     /**
      * Activity起動時DownloadServiceが動いていればトグルボタンの状態をONにする
      * @param c　context

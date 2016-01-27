@@ -4,9 +4,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import jp.ac.it_college.std.reachable_client.MainFragment;
 
 public class JsonDataSelector {
 
@@ -121,7 +124,7 @@ public class JsonDataSelector {
     }
 
     private CouponInfo createCouponInfo(String key, JSONObject object) {
-        String title = null, name = null, address = null, description = null;
+        String title = null, name = null, address = null, description = null, filePath = null;
         List<String> category = new ArrayList<>();
         try {
             name = object.getString(CouponInfo.NAME);
@@ -129,11 +132,13 @@ public class JsonDataSelector {
             address  = object.getString(CouponInfo.ADDRESS);
             description = object.getString(CouponInfo.DESCRIPTION);
             category = createList(object.getJSONArray(CouponInfo.CATEGORY));
+            File file = new File(MainFragment.IMAGE_PATH + "/" + key);
+            filePath = file.toString();
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        return new CouponInfo(key, title, name, address, description, category);
+        return new CouponInfo(key, title, name, address, description, category, filePath);
     }
 
     private List<String> createList(JSONArray category) {

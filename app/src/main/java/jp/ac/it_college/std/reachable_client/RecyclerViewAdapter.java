@@ -12,6 +12,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import jp.ac.it_college.std.reachable_client.json.CouponInfo;
@@ -33,12 +34,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.context = context;
         mLayoutInflater = LayoutInflater.from(context);
         mDataList = dataList;
+//        Collections.reverse(mDataList);
         visible.addAll(mDataList);
     }
 
     public OnClickCardView listener;
     public interface OnClickCardView {
-        void exec(String key);
+        void exec(int index, View view);
     }
     public void setOnClickCardViewListener(OnClickCardView onClickCardView) {
         listener = onClickCardView;
@@ -73,7 +75,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Picasso.with(context).load(file).placeholder(R.drawable.loading)
                 .transform(new BitmapTransform(RecyclerViewAdapter.THUMBNAIL_WIDTH, RecyclerViewAdapter.THUMBNAIL_HEIGHT))
                 .into(holder.imageView);
-        holder.imageView.setTag(R.integer.tag_company_name, visible.get(position));
+        holder.imageView.setTag(R.integer.tag_company_name, position);
 
 /*        String data = visible.get(position);
         holder.text.setText(data);*/
@@ -84,15 +86,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
         holder.text.setText(couponInfo.getTitle());
         holder.text2.setText(couponInfo.getCompanyName());
+//        notifyItemInserted(position);
     }
 
     @Override
     public void onClick(View v) {
 //        TextView text = (TextView) v.findViewById(R.id.company_name_label);
-        String index = (String) v.findViewById(R.id.img).getTag(R.integer.tag_company_name);
-
+        int index = (int) v.findViewById(R.id.img).getTag(R.integer.tag_company_name);
         if (listener != null) {
-            listener.exec(index);
+            listener.exec(index, v);
         }
     }
 

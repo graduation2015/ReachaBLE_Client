@@ -2,4 +2,46 @@
 <resources>
     <style name="AppTheme" parent="android:Theme.Material.Light">
     </style>
+<!--
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="@style/Theme.AppCompat.Light">
+        &lt;!&ndash; ToolBarの背景色 &ndash;&gt;
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        &lt;!&ndash; ToolBarのタイトルテキスト色 &ndash;&gt;
+        <item name="android:textColorPrimary">@android:color/black</item>
+        &lt;!&ndash; ToolBarのオプションメニューのOverflowアイコンの色 &ndash;&gt;
+        <item name="android:textColorSecondary">@android:color/black</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>
+
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="@style/Theme.AppCompat.Light">
+        &lt;!&ndash; ToolBarの背景色 &ndash;&gt;
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        &lt;!&ndash; ToolBarのタイトルテキスト色 &ndash;&gt;
+        <item name="android:textColorPrimary">@android:color/black</item>
+        &lt;!&ndash; ToolBarのオプションメニューのOverflowアイコンの色 &ndash;&gt;
+        <item name="android:textColorSecondary">@android:color/black</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>
+
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="@style/Theme.AppCompat.Light">
+        &lt;!&ndash; ToolBarの背景色 &ndash;&gt;
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        &lt;!&ndash; ToolBarのタイトルテキスト色 &ndash;&gt;
+        <item name="android:textColorPrimary">@android:color/black</item>
+        &lt;!&ndash; ToolBarのオプションメニューのOverflowアイコンの色 &ndash;&gt;
+        <item name="android:textColorSecondary">@android:color/black</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>-->
 </resources>
