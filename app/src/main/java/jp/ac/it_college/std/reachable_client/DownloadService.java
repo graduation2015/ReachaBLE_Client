@@ -1,5 +1,6 @@
 package jp.ac.it_college.std.reachable_client;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -16,6 +17,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -34,7 +36,9 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -44,7 +48,7 @@ import jp.ac.it_college.std.reachable_client.aws.AwsUtil;
 import jp.ac.it_college.std.reachable_client.json.CouponController;
 
 
-public class DownloadService extends Service {
+public class DownloadService extends Service implements Serializable{
     private List<BluetoothDevice> deviceList = new ArrayList<>();
     private Context context;
     private BluetoothGatt bluetoothGatt;
@@ -53,6 +57,9 @@ public class DownloadService extends Service {
     private AmazonS3Client s3Client;
     private Timer timer;
     private String key;
+    private boolean isConnecting = true;
+
+
 
 
     public static final String SERVICE_UUID_YOU_CAN_CHANGE = "0000180a-0000-1000-8000-00805f9b34fb";
@@ -69,10 +76,11 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v("test","start");
+        Log.v("test", "start");
 //        beginDownload("company01");
         timer = new Timer();
         timer.schedule(new CheckBluetoothEnable(), 500, 3000);
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -109,38 +117,6 @@ public class DownloadService extends Service {
             super.onServicesDiscovered(gatt, status);
             bluetoothGatt = gatt;
             mStatus = status;
-
-/*            if (status == BluetoothGatt.GATT_SUCCESS) {
-                BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
-                if (service == null) {
-                    // サービスが見つからなかった
-                } else {
-                    // サービスを見つけた
-                    BluetoothGattCharacteristic characteristic =
-                            service.getCharacteristic(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
-                    if (characteristic == null) {
-                        // キャラクタリスティックが見つからなかった
-                    } else {
-                        // キャラクタリスティックを見つけた
-
-                        // Notification を要求する
-                        boolean registered = gatt.setCharacteristicNotification(characteristic, true);
-
-                        // Characteristic の Notification 有効化
-                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                                UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
-                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                        gatt.writeDescriptor(descriptor);
-
-                        if (registered) {
-                            // Characteristics通知設定が成功
-                        } else {
-                            // Characteristics通知設定が失敗
-                        }
-                    }
-                }
-            }*/
-
         }
 
         @Override
@@ -218,13 +194,14 @@ public class DownloadService extends Service {
     private BluetoothGattCharacteristic getCharacteristic() {
         BluetoothGattService service = bluetoothGatt
                 .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
-/*        while (service == null) {
-            service = bluetoothGatt
-                    .getService(UUID.fromString(SERVICE_UUID_YOU_CAN_CHANGE));
-        }*/
-        Log.i("test", "gatt service: " + service);
 
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
+        Log.i("test", "gatt service: " + service);
+        BluetoothGattCharacteristic characteristic = null;
+        try {
+            characteristic = service.getCharacteristic(UUID.fromString(CHAR_UUID_YOU_CAN_CHANGE));
+        } catch (NullPointerException e) {
+            Log.e("test", e.toString());
+        }
         return characteristic;
     }
 
@@ -243,7 +220,7 @@ public class DownloadService extends Service {
      * 接続を切る
      */
     public void disconnect() {
-        Log.v("test","disconnect");
+        Log.v("test", "disconnect");
         if (bluetoothGatt != null) {
             bluetoothGatt.close();
             bluetoothGatt = null;
@@ -264,16 +241,23 @@ public class DownloadService extends Service {
     private void readCharacteristic(BluetoothDevice device) {
         Log.v("test","read " + bluetoothGatt);
         BleDeviceListManager deviceManager = new BleDeviceListManager();
-        if (mStatus == BluetoothGatt.GATT_SUCCESS && bluetoothGatt != null) {
-            try {
-                bluetoothGatt.readCharacteristic(getCharacteristic());
-            } catch (Exception e) {
-                Log.e("test", "readCharacteristic : " + e.toString(), e);
-                deviceManager.undoDeviceList(device);
+
+        if (mStatus == BluetoothGatt.GATT_SUCCESS & bluetoothGatt != null) {
+            BluetoothGattCharacteristic characteristic = getCharacteristic();
+            if (characteristic != null) {
+                try {
+                    bluetoothGatt.readCharacteristic(characteristic);
+                } catch (Exception e) {
+                    Log.e("test", "readCharacteristic : " + e.toString(), e);
+                    deviceManager.undoDeviceList(device);
+                    disconnect();
+                }
+            } else {
                 disconnect();
             }
         } else {
             Log.v("test", "gatt is null");
+            deviceManager.undoDeviceList(device);
             disconnect();
         }
     }
@@ -340,6 +324,10 @@ public class DownloadService extends Service {
                 file);
 
         observer.setTransferListener(new S3DownloadListener());
+
+        SharedPreferences pref = context.getSharedPreferences("new Coupon pref", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("new Coupon", pref.getString("new Coupon", "") + msg + " ").apply();
     }
 
     /**
@@ -359,7 +347,6 @@ public class DownloadService extends Service {
                     break;
                 case COMPLETED:
                     if ( ++count >= 2 ) {
-
                         CouponController controller = new CouponController();
                         try {
                             controller.addCouponDownloadDate(context, key);

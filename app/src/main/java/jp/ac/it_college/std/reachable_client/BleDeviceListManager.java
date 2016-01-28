@@ -26,7 +26,9 @@ public class BleDeviceListManager {
 
     // 登録したデバイスからnullが返ってきたとき、デバイスリストから削除する
     public void undoDeviceList(BluetoothDevice device) {
-        deviceList.remove(device);
+        if(isAdded(device)) {
+            deviceList.remove(device);
+        }
     }
 
     public void resetList() {

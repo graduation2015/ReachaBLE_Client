@@ -37,12 +37,15 @@ public class CouponController {
         long currentTime = System.currentTimeMillis();
         for (String key : list) {
             if (currentTime - pref.getLong(key, currentTime) > 1000 * 60 * 60 * 24) {
+                //クーポンのjsonファイルと画像を削除
                 File jsonFile = new File(MainFragment.JSON_PATH + "/" + key + ".json");
                 jsonFile.delete();
                 File couponImage = new File(MainFragment.IMAGE_PATH + "/" + key);
                 couponImage.delete();
 
-                manager.getJsonRootObject().remove(key);
+                JSONObject object = manager.getJsonRootObject();
+                object.remove(key);
+                manager.putJsonObj(object);
             }
         }
     }

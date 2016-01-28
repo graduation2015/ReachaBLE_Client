@@ -80,13 +80,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 /*        String data = visible.get(position);
         holder.text.setText(data);*/
 
-        JsonManager manager = new JsonManager(context);
-        List<CouponInfo> couponInfoList = manager.getCouponInfoList();
-        CouponInfo couponInfo = couponInfoList.get(position);
+        if (mDataList.size() > 0) {
+            JsonManager manager = new JsonManager(context);
+            List<CouponInfo> couponInfoList = manager.getCouponInfoList();
+            CouponInfo couponInfo = couponInfoList.get(position);
 
-        holder.text.setText(couponInfo.getTitle());
-        holder.text2.setText(couponInfo.getCompanyName());
-//        notifyItemInserted(position);
+            holder.text.setText(couponInfo.getTitle());
+            holder.text2.setText(couponInfo.getCompanyName());
+        }
     }
 
     @Override
@@ -96,6 +97,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         if (listener != null) {
             listener.exec(index, v);
         }
+    }
+
+    public void invalidatePicaso(String key) {
+        File file = new File(MainFragment.IMAGE_PATH + "/" + key);
+        Picasso.with(context).invalidate(file);
     }
 
     public void searchResult(String key) {

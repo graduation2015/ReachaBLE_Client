@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -81,13 +82,13 @@ public class MainFragment extends Fragment implements View.OnClickListener
         cardLinear = (LinearLayout) contentView.findViewById(R.id.cardLinear);
 
         mRecyclerView = (RecyclerView) contentView.findViewById(R.id.my_recycler_view);
-        // コンテンツの変化でRecyclerViewのサイズが変わらない場合は、
-        // パフォーマンスを向上させることができる
+//        mRecyclerView.setItemAnimator(new SlideInLeftAnimator());
+//        mRecyclerView.getItemAnimator().setAddDuration(250);
         mRecyclerView.setHasFixedSize(true);
 
-        setSearchView(list);
-        setDownLoads(list);
         updateInfoJson(list);
+        setRecyclerViewAdapter(list);
+        setDownLoads(list);
 
         jsonManager = new JsonManager(getActivity());
         couponInfoList = jsonManager.getCouponInfoList();
@@ -121,7 +122,7 @@ public class MainFragment extends Fragment implements View.OnClickListener
                 new Pair<View, String>(companyName, getString(R.string.transition_company_name))
         );
     }
-    private void setSearchView(List<String> list) {
+    private void setRecyclerViewAdapter(List<String> list) {
         cardLinear.removeAllViews();
 
         // LinearLayoutManagerを使用する
@@ -135,6 +136,7 @@ public class MainFragment extends Fragment implements View.OnClickListener
             @Override
             public void exec(int index, View view) {
                 Intent intent = new Intent(getActivity(), CouponDetailActivity.class);
+                couponInfoList = jsonManager.getCouponInfoList();
                 intent.putExtra(CouponDetailActivity.SELECTED_ITEM, (Serializable) couponInfoList.get(index));
                 intent.putExtra(CouponDetailActivity.SELECTED_ITEM_POSITION, index);
                 ActivityCompat.startActivity(getActivity(), intent, makeSharedElementOptions(view).toBundle());
@@ -158,11 +160,22 @@ public class MainFragment extends Fragment implements View.OnClickListener
     private void updateList() {
         list = new ArrayList<>();
         Collections.addAll(list, new File(IMAGE_PATH).list());
+        updateInfoJson(list);
 //        Collections.reverse(list);
+
+        SharedPreferences pref = getActivity().getSharedPreferences("new Coupon pref", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        String checkCoupon = pref.getString("new Coupon", "");
+        for (String i : list) {
+            if (checkCoupon.contains(i)) {
+                recyclerViewAdapter.invalidatePicaso(i);
+            }
+        }
+        editor.putString("new Coupon","").apply();
+
         recyclerViewAdapter.addList(list);
         searchView.onActionViewCollapsed();
         mAdapter.notifyDataSetChanged();
-        updateInfoJson(list);
     }
 
     private boolean searchCoupon(String searchKey) {
@@ -286,7 +299,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
                 jsonStr = reader.getJsonStr(new FileInputStream(downloadJsonPath));
 
                 JSONObject downloadJson = new JSONObject(jsonStr).getJSONObject(key);
-
                 jsonManager = new JsonManager(getActivity());
                 JSONObject rootJson = jsonManager.getJsonRootObject().put(key, downloadJson);
 
@@ -295,6 +307,8 @@ public class MainFragment extends Fragment implements View.OnClickListener
                 e.printStackTrace();
             }
         }
+        this.list = new ArrayList<>();
+        Collections.addAll(this.list, new File(IMAGE_PATH).list());
     }
 
     /**
@@ -315,7 +329,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
      */
     private void checkServiceRunning(Context c, Class<?> cls) {
         if (isServiceRunning(c, cls)) {
-//            serviceToggle.setChecked(true);
             bleServiceToggle.setChecked(true);
         }
     }

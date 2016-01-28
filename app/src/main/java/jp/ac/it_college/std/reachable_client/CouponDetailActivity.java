@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.util.Collections;
 
 import jp.ac.it_college.std.reachable_client.json.CouponInfo;
 import jp.ac.it_college.std.reachable_client.json.JsonManager;
@@ -36,7 +37,6 @@ public class CouponDetailActivity extends AppCompatActivity {
 
     /* Coupon */
     private CouponInfo mSelectedItem;
-    private boolean mIsUploaded;
 
     /* Json */
     private JsonManager mJsonManager;
@@ -110,7 +110,7 @@ public class CouponDetailActivity extends AppCompatActivity {
             category += tag + ", ";
         }
         getCategoryView().setText(category.length() == 0
-                ? getString(R.string.no_category) : category);
+                ? getString(R.string.no_category) : category.substring(0, category.length() - 2));
         //タイトルをセット
         getTitleView().setText(info.getTitle());
 

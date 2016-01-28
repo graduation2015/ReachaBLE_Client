@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -108,10 +109,11 @@ public class JsonDataSelector {
 
     public List<CouponInfo> getCouponInfoList(JSONObject rootObj) {
         List<CouponInfo> list = new ArrayList<>();
-        Iterator<String> iterator = rootObj.keys();
+//        Iterator<String> iterator = rootObj.keys();
+        List<String> couponKeys = new ArrayList<>();
+        Collections.addAll(couponKeys, new File(MainFragment.IMAGE_PATH).list());
 
-        while (iterator.hasNext()) {
-            String key = iterator.next();
+        for (String key : couponKeys) {
             try {
                 JSONObject object = rootObj.getJSONObject(key);
                 list.add(createCouponInfo(key, object));

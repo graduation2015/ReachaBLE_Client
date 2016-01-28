@@ -145,6 +145,9 @@ public class JsonManager {
         return jsonDataSelector.getCouponInfoList(getJsonRootObject());
     }
 
+//    public CouponInfo getCouponInfo() {
+//    }
+
     /**
      * 指定されたキーのオブジェクトを削除
      * @param key
