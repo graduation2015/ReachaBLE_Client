@@ -3,6 +3,7 @@ package jp.ac.it_college.std.reachable_client;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Fragment;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -45,8 +46,7 @@ import jp.ac.it_college.std.reachable_client.json.CouponInfo;
 import jp.ac.it_college.std.reachable_client.json.JsonDataReader;
 import jp.ac.it_college.std.reachable_client.json.JsonManager;
 
-public class MainFragment extends Fragment implements View.OnClickListener
-        , SwipeRefreshLayout.OnRefreshListener{
+public class MainFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
 
     public static String IMAGE_PATH;
     public static String JSON_PATH;
@@ -82,12 +82,11 @@ public class MainFragment extends Fragment implements View.OnClickListener
         cardLinear = (LinearLayout) contentView.findViewById(R.id.cardLinear);
 
         mRecyclerView = (RecyclerView) contentView.findViewById(R.id.my_recycler_view);
-//        mRecyclerView.setItemAnimator(new SlideInLeftAnimator());
-//        mRecyclerView.getItemAnimator().setAddDuration(250);
         mRecyclerView.setHasFixedSize(true);
 
         updateInfoJson(list);
         setRecyclerViewAdapter(list);
+        checkNewCoupon();
         setDownLoads(list);
 
         jsonManager = new JsonManager(getActivity());
@@ -100,12 +99,8 @@ public class MainFragment extends Fragment implements View.OnClickListener
     private void findViews(View contentView) {
         mSwipeRefreshLayout = (SwipeRefreshLayout) contentView.findViewById(R.id.contentView);
 
-        // 色設定
-
         // Listenerをセット
         mSwipeRefreshLayout.setOnRefreshListener(this);
-
-
     }
 
     private ActivityOptionsCompat makeSharedElementOptions(View view) {
@@ -161,8 +156,15 @@ public class MainFragment extends Fragment implements View.OnClickListener
         list = new ArrayList<>();
         Collections.addAll(list, new File(IMAGE_PATH).list());
         updateInfoJson(list);
-//        Collections.reverse(list);
 
+        checkNewCoupon();
+
+        recyclerViewAdapter.addList(list);
+        searchView.onActionViewCollapsed();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void checkNewCoupon() {
         SharedPreferences pref = getActivity().getSharedPreferences("new Coupon pref", Activity.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         String checkCoupon = pref.getString("new Coupon", "");
@@ -172,10 +174,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
             }
         }
         editor.putString("new Coupon","").apply();
-
-        recyclerViewAdapter.addList(list);
-        searchView.onActionViewCollapsed();
-        mAdapter.notifyDataSetChanged();
     }
 
     private boolean searchCoupon(String searchKey) {
@@ -223,12 +221,13 @@ public class MainFragment extends Fragment implements View.OnClickListener
             }
         });
 
-
+        //TODO:switchCompat
         final MenuItem menuBleToggle = menu.findItem(R.id.menu_switch);
         bleServiceToggle = (SwitchCompat) menuBleToggle.getActionView();
         bleServiceToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                bleServiceToggle.setClickable(false);
                 if (isChecked && bleServiceToggle.getLinksClickable()) {
                     Intent intent = new Intent(getActivity(), DownloadService.class);
                     getActivity().startService(intent);
@@ -236,6 +235,12 @@ public class MainFragment extends Fragment implements View.OnClickListener
                     new BleDeviceListManager().resetList();
                     getActivity().stopService(new Intent(getActivity(), DownloadService.class));
                 }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleServiceToggle.setClickable(true);
+                    }
+                }, 1000);
             }
         });
         checkServiceRunning(getActivity(), DownloadService.class);
@@ -256,20 +261,6 @@ public class MainFragment extends Fragment implements View.OnClickListener
                 }
             }
         });
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-/*            case R.id.filter_btn:
-                showCategorySingleChoiceDialog();
-                break;
-            case R.id.update_btn:
-                updateList();
-                break;*/
-            default:
-                break;
-        }
     }
 
     @Override
@@ -328,8 +319,13 @@ public class MainFragment extends Fragment implements View.OnClickListener
      * @param cls 確認したいserviceクラス、ここでいうDownloadService
      */
     private void checkServiceRunning(Context c, Class<?> cls) {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
         if (isServiceRunning(c, cls)) {
-            bleServiceToggle.setChecked(true);
+            if (bt.getState() != BluetoothAdapter.STATE_ON) {
+                bleServiceToggle.setChecked(true);
+            } else {
+                getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+            }
         }
     }
 

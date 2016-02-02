@@ -56,9 +56,7 @@ public class BLEScannerLolipop extends ScanCallback {
                 return;
             }
 
-            if (mBluetoothAdapter.isEnabled()) {
-                mBluetoothAdapter.disable();
-            }
+            mBluetoothAdapter.disable();
         }
     }
 

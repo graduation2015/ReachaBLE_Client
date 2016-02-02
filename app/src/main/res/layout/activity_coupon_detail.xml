@@ -28,8 +28,9 @@
             <ImageView
                 android:id="@+id/img_coupon_pic"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:scaleType="centerCrop"
+                android:layout_height="252dp"
+                android:layout_gravity="bottom"
+                android:scaleType="centerInside"
                 android:transitionName="@string/transition_img" />
 
             <android.support.v7.widget.Toolbar

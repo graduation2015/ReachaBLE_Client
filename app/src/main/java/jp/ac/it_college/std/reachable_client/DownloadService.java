@@ -180,10 +180,12 @@ public class DownloadService extends Service implements Serializable{
      * BLEを停止させる
      */
     private void scanStop() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            bleScannerLolipop.stopScan();
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            bleScannerKitkat.stopScan();
+        if (bt.getState() == BluetoothAdapter.STATE_ON) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                bleScannerLolipop.stopScan();
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                bleScannerKitkat.stopScan();
+            }
         }
     }
 
@@ -370,7 +372,9 @@ public class DownloadService extends Service implements Serializable{
                         builder.setAutoCancel(true);
 
                         NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+                        builder.build().defaults |= Notification.DEFAULT_VIBRATE;
                         manager.notify(1, builder.build());
+
                     }
 //                    mDialogFragment.dismiss();
 //                    Toast.makeText(getActivity(), "Download completed.", Toast.LENGTH_SHORT).show();
