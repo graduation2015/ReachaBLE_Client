@@ -1,8 +1,6 @@
 package jp.ac.it_college.std.reachable_client;
 import android.app.Fragment;
 import android.app.LoaderManager;
-import android.bluetooth.BluetoothAdapter;
-import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -11,30 +9,27 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import com.amazonaws.auth.AWSCredentials;
 
-import java.io.Serializable;
+import jp.ac.it_college.std.reachable_client.aws.AWSClientManager;
 
 public class MainActivity extends AppCompatActivity
             implements LoaderManager.LoaderCallbacks<AWSCredentials> {
 
 
     private String[] mPlanetTitles;
-    private ListView mDrawerList;
-    private DrawerLayout mDrawerLayout;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
-    private ActionBarDrawerToggle mDrawerToggle;
     private Toolbar mToolbar;
     private AWSClientManager mClientManager;
     private ProgressDialogFragment mDialogFragment;
-    private final int REQUEST_ENABLE_BT = 0x01;
+    private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private Fragment fragment;
 
 
     @Override
@@ -44,61 +39,51 @@ public class MainActivity extends AppCompatActivity
 
         initFragment(savedInstanceState);
         findViews();
-//        setUpDrawerList();
         setUpToolbar();
-//        initAWSClient();
-        bluetoothSetUp();
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-//        mDrawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-//        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-//        if (mDrawerToggle.onOptionsItemSelected(item)) {
-//            return true;
-//        }
-        return super.onOptionsItemSelected(item);
+        boolean result = true;
+        switch (item.getItemId()) {
+            case R.id.home:
+                fragment = new MainFragment();
+                getFragmentManager().beginTransaction().replace(R.id.container_content, fragment).commit();
+                break;
+            case R.id.switchForActionBar:
+                Log.v("test", "switch touched");
+            default:
+                result = super.onOptionsItemSelected(item);
+        }
+        return result;
     }
 
     private void findViews() {
         mPlanetTitles = getResources().getStringArray(R.array.categories);
-//        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-//        mDrawerList = (ListView) findViewById(R.id.list_view);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
     }
 
+    public Toolbar getToolbar() {
+        return mToolbar;
+    }
     private void setUpToolbar() {
-//        setSupportActionBar(mToolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setHomeButtonEnabled(true);
+        setSupportActionBar(mToolbar);
     }
 
-    private void bluetoothSetUp() {
-        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
-
-        if (bt == null) {
-            return;
-        }
-
-        if (!bt.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-    }
-
-/*
 
     private void setUpDrawerList() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
         mTitle = mDrawerTitle = getTitle();
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar
                 ,R.string.drawer_open, R.string.drawer_close) {
@@ -112,21 +97,10 @@ public class MainActivity extends AppCompatActivity
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
                 //ドロワーを閉じた時に呼ばれる
-
             }
         };
+        mDrawerToggle.setDrawerIndicatorEnabled(false);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, mPlanetTitles));
-        // Set the list's click listener
-//        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-    }
-*/
-
-    private void initAWSClient() {
-        getLoaderManager().restartLoader(0, null, this);
     }
 
     private void initFragment(Bundle savedInstanceState) {
@@ -171,55 +145,13 @@ public class MainActivity extends AppCompatActivity
     public void onLoaderReset(Loader<AWSCredentials> loader) {
 
     }
-/*
 
-    private class DrawerItemClickListener implements android.widget.AdapterView.OnItemClickListener {
-
-        public static final int FRAGMENT_MAIN = 0;
-
-        //TODO:フィルター
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-            selectItem(Category.values()[position]);
-        }
-
-        private void selectItem(Category category) {
-            String select;
-            switch (category) {
-                case Food:
-                    select = "Food";
-                    break;
-                case Fashion:
-                    select = "Fashion";
-                    break;
-                default:
-                    select = "";
-                    break;
-            }
-
-
-
-*/
-/*            Fragment fragment = getFragment(position);
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.container_content, fragment)
-                    .commit();
-
-            mDrawerList.setItemChecked(position, true);
-            setTitle(mPlanetTitles[position]);
-            mDrawerLayout.closeDrawers();*//*
-
-        }
-
-        private Fragment getFragment(int position) {
-            switch (position) {
-                case FRAGMENT_MAIN:
-                    return new MainFragment();
-                default:
-                    return new MainFragment();
-            }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        int backStackCnt = getSupportFragmentManager().getBackStackEntryCount();
+        if (backStackCnt != 0) {
+            getSupportFragmentManager().popBackStack();
         }
     }
-*/
-
 }

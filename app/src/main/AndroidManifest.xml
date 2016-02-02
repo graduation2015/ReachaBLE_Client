@@ -6,22 +6,26 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Bluetooth使用許可 -->
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <!-- BluetoothLEのみを使用 -->
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:hardwareAccelerated="true"
+        android:icon="@drawable/icon_reachable"
         android:label="@string/app_name"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar" >
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,6 +37,11 @@
             android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
             android:enabled="true" />
         <service android:name=".DownloadService" />
+
+        <activity
+            android:name=".CouponDetailActivity"
+            android:label="@string/title_activity_coupon_detail" >
+        </activity>
     </application>
 
 </manifest>

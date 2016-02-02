@@ -1,197 +1,363 @@
 package jp.ac.it_college.std.reachable_client;
 
-import android.app.ListFragment;
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.util.Pair;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.Toast;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
+import android.widget.ToggleButton;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-public class MainFragment extends ListFragment implements View.OnClickListener{
+import jp.ac.it_college.std.reachable_client.json.CouponController;
+import jp.ac.it_college.std.reachable_client.json.CouponInfo;
+import jp.ac.it_college.std.reachable_client.json.JsonDataReader;
+import jp.ac.it_college.std.reachable_client.json.JsonManager;
 
-    private List<Bitmap> items = new ArrayList<>();
+public class MainFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
+
     public static String IMAGE_PATH;
     public static String JSON_PATH;
-    private String checkedCategory;
+
     private JsonManager jsonManager;
-    private List<String> filterItems = new ArrayList<>();
-    private List<String> checkedCategories = new ArrayList<>();
-    private ChoiceDialog singleChoiceDialog;
-
-//    public static final String TAGS_PATH;
-    private List<String> list;
-
-
-
+    private List<String> saveList = new ArrayList<>();
+    private LinearLayout cardLinear;
+    private LayoutInflater inflater;
+    private List<String> list = new ArrayList<>();
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private SearchView searchView;
+    private SwitchCompat bleServiceToggle;
+    private RecyclerViewAdapter recyclerViewAdapter;
+    private ToggleButton viewToggle;
+    private List<CouponInfo> couponInfoList;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mkdir();
+        setHasOptionsMenu(true);
 
-        setListAdapter(new S3DownloadsListAdapter(getActivity(), R.layout.row_s3_downloads, items));
+        this.inflater = inflater;
 
-        list = Arrays.asList(new File(IMAGE_PATH).list());
+        Collections.addAll(list, new File(IMAGE_PATH).list());
+        saveList.addAll(list);
+
+        View contentView = inflater.inflate(R.layout.fragment_main, container, false);
+
+        cardLinear = (LinearLayout) contentView.findViewById(R.id.cardLinear);
+
+        mRecyclerView = (RecyclerView) contentView.findViewById(R.id.my_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+
+        updateInfoJson(list);
+        setRecyclerViewAdapter(list);
+        checkNewCoupon();
         setDownLoads(list);
 
         jsonManager = new JsonManager(getActivity());
+        couponInfoList = jsonManager.getCouponInfoList();
 
-        singleChoiceDialog = ChoiceDialog.newInstance(this, new CategorySingleChoiceDialog());
-
-
-        View contentView = inflater.inflate(R.layout.fragment_main, container, false);
         findViews(contentView);
-
         return contentView;
     }
 
     private void findViews(View contentView) {
-        contentView.findViewById(R.id.filter_btn).setOnClickListener(this);
-        contentView.findViewById(R.id.start_btn).setOnClickListener(this);
-        contentView.findViewById(R.id.stop_btn).setOnClickListener(this);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) contentView.findViewById(R.id.contentView);
+
+        // Listenerをセット
+        mSwipeRefreshLayout.setOnRefreshListener(this);
     }
 
+    private ActivityOptionsCompat makeSharedElementOptions(View view) {
+        View toolbar = ((MainActivity) getActivity()).getToolbar();
+        View image = view.findViewById(R.id.img);
+        View title = view.findViewById(R.id.coupon_title_label);
+        View companyName = view.findViewById(R.id.company_name_label);
+
+        return ActivityOptionsCompat.makeSceneTransitionAnimation(
+                getActivity(),
+                new Pair<View, String>(toolbar, getString(R.string.transition_toolbar)),
+                new Pair<View, String>(image, getString(R.string.transition_img)),
+                new Pair<View, String>(title, getString(R.string.transition_title)),
+                new Pair<View, String>(companyName, getString(R.string.transition_company_name))
+        );
+    }
+    private void setRecyclerViewAdapter(List<String> list) {
+        cardLinear.removeAllViews();
+
+        // LinearLayoutManagerを使用する
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        // アダプタを指定する
+        mAdapter = new RecyclerViewAdapter(getActivity(), list);
+        recyclerViewAdapter = (RecyclerViewAdapter) mAdapter;
+        recyclerViewAdapter.setOnClickCardViewListener(new RecyclerViewAdapter.OnClickCardView() {
+            @Override
+            public void exec(int index, View view) {
+                Intent intent = new Intent(getActivity(), CouponDetailActivity.class);
+                couponInfoList = jsonManager.getCouponInfoList();
+                intent.putExtra(CouponDetailActivity.SELECTED_ITEM, (Serializable) couponInfoList.get(index));
+                intent.putExtra(CouponDetailActivity.SELECTED_ITEM_POSITION, index);
+                ActivityCompat.startActivity(getActivity(), intent, makeSharedElementOptions(view).toBundle());
+
+            }
+        });
+        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    /**
+     * ダウンロードされた画像をリストに追加して表示
+     * @param list
+     */
     private void setDownLoads(List<String> list) {
-        items.clear();
-
-        for (String name : list) {
-            Bitmap bitmap = BitmapFactory.decodeFile(IMAGE_PATH + "/" + name);
-            items.add(bitmap);
-        }
-        ((S3DownloadsListAdapter) getListAdapter()).notifyDataSetChanged();
+        mAdapter.notifyDataSetChanged();
     }
 
-    private void showCategorySingleChoiceDialog() {
-        singleChoiceDialog.show(getFragmentManager(), "singleChoice");
+    /**
+     * 更新時にリストを更新し、新しくダウンロードした画像を表示
+     */
+    private void updateList() {
+        list = new ArrayList<>();
+        Collections.addAll(list, new File(IMAGE_PATH).list());
+        updateInfoJson(list);
+
+        checkNewCoupon();
+
+        recyclerViewAdapter.addList(list);
+        searchView.onActionViewCollapsed();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void checkNewCoupon() {
+        SharedPreferences pref = getActivity().getSharedPreferences("new Coupon pref", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        String checkCoupon = pref.getString("new Coupon", "");
+        for (String i : list) {
+            if (checkCoupon.contains(i)) {
+                recyclerViewAdapter.invalidatePicaso(i);
+            }
+        }
+        editor.putString("new Coupon","").apply();
+    }
+
+    private boolean searchCoupon(String searchKey) {
+        String[] queryArray = searchKey.split(" ", 0);
+        recyclerViewAdapter.itemReset();
+        for (String name : list) {
+            CouponInfo couponInfo = couponInfoList.get(list.indexOf(name));
+            for (String queryKey : queryArray) {
+                if (recyclerViewAdapter.containsVisible(name) && !couponInfo.getMetaData().contains(queryKey)) {
+                    recyclerViewAdapter.searchResult(name);
+                }
+            }
+        }
+
+        mAdapter.notifyDataSetChanged();
+        searchView.clearFocus();
+        return true;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_toolbar, menu);
+
+        final MenuItem searchMenu = menu.findItem(R.id.menu_search);
+        searchView = (SearchView) searchMenu.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return searchCoupon(query);
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                updateList();
+                Log.v("test", "update");
+                return false;
+            }
+        });
+
+        //TODO:switchCompat
+        final MenuItem menuBleToggle = menu.findItem(R.id.menu_switch);
+        bleServiceToggle = (SwitchCompat) menuBleToggle.getActionView();
+        bleServiceToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                bleServiceToggle.setClickable(false);
+                if (isChecked && bleServiceToggle.getLinksClickable()) {
+                    Intent intent = new Intent(getActivity(), DownloadService.class);
+                    getActivity().startService(intent);
+                } else {
+                    new BleDeviceListManager().resetList();
+                    getActivity().stopService(new Intent(getActivity(), DownloadService.class));
+                }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        bleServiceToggle.setClickable(true);
+                    }
+                }, 1000);
+            }
+        });
+        checkServiceRunning(getActivity(), DownloadService.class);
+
+        final MenuItem menuViewToggle = menu.findItem(R.id.menu_view_toggle);
+        menuViewToggle.setActionView(R.layout.menu_view_toggle_layout);
+        viewToggle = (ToggleButton) menuViewToggle.getActionView();
+        viewToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    menuViewToggle.setIcon(R.drawable.ic_view_list_black_24dp);
+                    mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(
+                            2, StaggeredGridLayoutManager.VERTICAL));
+                } else {
+                    menuViewToggle.setIcon(R.drawable.ic_view_quilt_black_24dp);
+                    mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+                }
+            }
+        });
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CategorySingleChoiceDialog.REQUEST_ITEMS) {
-            switch (resultCode) {
-                case DialogInterface.BUTTON_POSITIVE:
-                    setCategories(data);
-                    if (checkedCategory.equals("All")) {
-                        setDownLoads(list);
-                    } else {
-                        loadJSON();
-                    }
-                    break;
+    }
+
+    /**
+     * Activity起動時または更新ボタンを押されたときにダウンロードされたjsonファイルを読み込んでinfo.jsonファイルにまとめる
+     * @param list
+     */
+    private void updateInfoJson(List<String> list) {
+        CouponController controller = new CouponController();
+        try {
+            controller.checkCouponDate(getActivity(), list);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        for (String key : list) {
+            String jsonStr;
+            File downloadJsonPath = new File(MainFragment.JSON_PATH, key + ".json");
+
+            try {
+                JsonDataReader reader = new JsonDataReader();
+                jsonStr = reader.getJsonStr(new FileInputStream(downloadJsonPath));
+
+                JSONObject downloadJson = new JSONObject(jsonStr).getJSONObject(key);
+                jsonManager = new JsonManager(getActivity());
+                JSONObject rootJson = jsonManager.getJsonRootObject().put(key, downloadJson);
+
+                jsonManager.putJsonObj(rootJson);
+            } catch (JSONException | FileNotFoundException e) {
+                e.printStackTrace();
             }
         }
+        this.list = new ArrayList<>();
+        Collections.addAll(this.list, new File(IMAGE_PATH).list());
     }
 
     /**
-     * ダイアログで選択したカテゴリをセット
-     * @param data
+     * 初回起動時に必要なディレクトリを作成
      */
-    private void setCategories(Intent data) {
-/*
-        //Multiple用
-        List<String> checkedCategories = data.getStringArrayListExtra(CategoryMultipleChoiceDialog.CHECKED_ITEMS);
-        this.checkedCategories.clear();
-        this.checkedCategories.addAll(checkedCategories);
-*/
-
-        //Single用
-        this.checkedCategory = data.getStringExtra(CategorySingleChoiceDialog.CHECKED_ITEMS);
-    }
-
-    /**
-     * フィルターを実行してJSONを読み込む
-     */
-    private void loadJSON() {
-        JSONObject rootObject = jsonManager.getJsonRootObject();
-        executeCategoryFilter(rootObject);
-    }
-
-    /**
-     * フィルターを実行してリストを更新
-     * @param rootObject
-     */
-    private void executeCategoryFilter(JSONObject rootObject) {
-        filterItems.clear();
-//        jsonManager.executeFilter(rootObject, getFilter(), CouponInfo.CATEGORY, items);
-        jsonManager.executeFilter(
-                rootObject, getCheckedCategory(), CouponInfo.CATEGORY, filterItems);
-
-        setDownLoads(filterItems);
-    }
-
-    private void bluetoothDisable() {
-        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
-
-        if (bt == null) {
-            return;
-        }
-
-        if (bt.isEnabled()) {
-            bt.disable();
-        }
-    }
-
     private void mkdir() {
 
-   /*     File file = new File(getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES).getPath());
-        file.mkdirs();*/
         IMAGE_PATH = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES).getPath();
         JSON_PATH = getActivity().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getPath();
         new File(IMAGE_PATH).mkdirs();
         new File(JSON_PATH).mkdirs();
 
     }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.filter_btn:
-                showCategorySingleChoiceDialog();
-                break;
-            case R.id.start_btn:
-                Intent intent = new Intent(getActivity(), DownloadService.class);
-                getActivity().startService(intent);
-                break;
-            case R.id.stop_btn:
+    /**
+     * Activity起動時DownloadServiceが動いていればトグルボタンの状態をONにする
+     * @param c　context
+     * @param cls 確認したいserviceクラス、ここでいうDownloadService
+     */
+    private void checkServiceRunning(Context c, Class<?> cls) {
+        BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
+        if (isServiceRunning(c, cls)) {
+            if (bt.getState() != BluetoothAdapter.STATE_ON) {
+                bleServiceToggle.setChecked(true);
+            } else {
                 getActivity().stopService(new Intent(getActivity(), DownloadService.class));
-                break;
-            default:
-                break;
+            }
         }
     }
 
-    private String getCheckedCategory() {
-        return checkedCategory;
+    /**
+     * serviceクラスが動いているか判別してboolean型を返す
+     * @param c　context
+     * @param cls 確認したいserviceクラス、ここでいうDownloadService
+     * @return serviceが動いていればtrue、動いてなければfalseを返す
+     */
+    public boolean isServiceRunning(Context c, Class<?> cls) {
+        ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> runningService = am.getRunningServices(Integer.MAX_VALUE);
+        for (ActivityManager.RunningServiceInfo i : runningService) {
+            Log.d("test", "service: " + i.service.getClassName() + " : " + i.started);
+            if (cls.getName().equals(i.service.getClassName())) {
+                Log.d("test", "running");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void onRefresh() {
+        updateList();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // 更新が終了したらインジケータ非表示
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 500);
     }
 }

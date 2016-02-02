@@ -48,36 +48,27 @@ public class BLEScannerLolipop extends ScanCallback {
 
     //スキャン停止
     public void stopScan() {
+
         if (mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(this);
             isScanning = false;
-        }
-    }
+            if (mBluetoothAdapter == null) {
+                return;
+            }
 
-    // スキャンしたデバイスがリストに追加済みかどうかの確認
-    public boolean isAdded(BluetoothDevice device) {
-            return deviceList.contains(device);
+            mBluetoothAdapter.disable();
+        }
     }
 
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         super.onScanResult(callbackType, result);
-
+        BleDeviceListManager deviceManager = new BleDeviceListManager();
         if (result != null && result.getDevice() != null) {
-            if (!isAdded(result.getDevice())) {
-                saveDevice(result.getDevice());
-                //TODO:Download処理
+            if (!deviceManager.isAdded(result.getDevice())) {
+                deviceManager.saveDevice(result.getDevice());
                 downloadService.getS3Key(context, result.getDevice());
             }
         }
-    }
-
-    // スキャンしたデバイスのリスト保存
-    public void saveDevice(BluetoothDevice device) {
-        if (deviceList == null) {
-            deviceList = new ArrayList<>();
-        }
-
-        deviceList.add(device);
     }
 }
